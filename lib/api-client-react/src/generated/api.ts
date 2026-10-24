@@ -31,6 +31,7 @@ import type {
   CheckoutSession,
   CheckoutStatus,
   DashboardSummary,
+  DemoUnlockInput,
   DemoUnlockResponse,
   FounderMessageInput,
   FounderMessageReply,
@@ -42,6 +43,7 @@ import type {
   MessageHistory,
   PaymentStatus,
   QuestionSet,
+  UnlockClickResponse,
   ValidationReport
 } from './api.schemas';
 
@@ -1314,6 +1316,80 @@ export function useGetVerifaiCheckoutStatus<TData = Awaited<ReturnType<typeof ge
 
 
 
+export const getTrackVerifaiUnlockClickUrl = (ideaId: string,) => {
+
+
+
+
+  return `/api/verifai/ideas/${ideaId}/unlock-click`
+}
+
+/**
+ * @summary Record a click on the no-charge research unlock
+ */
+export const trackVerifaiUnlockClick = async (ideaId: string, options?: Parameters<typeof customFetch>[1]): Promise<UnlockClickResponse> => {
+
+  return customFetch<UnlockClickResponse>(getTrackVerifaiUnlockClickUrl(ideaId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getTrackVerifaiUnlockClickMutationKey = () => ['trackVerifaiUnlockClick'] as const;
+
+export const getTrackVerifaiUnlockClickMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trackVerifaiUnlockClick>>, TError,TrackVerifaiUnlockClickMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof trackVerifaiUnlockClick>>, TError,TrackVerifaiUnlockClickMutationVariables, TContext> => {
+
+const mutationKey = getTrackVerifaiUnlockClickMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trackVerifaiUnlockClick>>, TrackVerifaiUnlockClickMutationVariables> = (props) => {
+          const {ideaId} = props ?? {};
+
+          return  trackVerifaiUnlockClick(ideaId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TrackVerifaiUnlockClickMutationResult = NonNullable<Awaited<ReturnType<typeof trackVerifaiUnlockClick>>>
+
+    export type TrackVerifaiUnlockClickMutationError = ErrorType<void>
+    export type TrackVerifaiUnlockClickMutationVariables = {ideaId: string}
+
+    /**
+ * @summary Record a click on the no-charge research unlock
+ */
+export const useTrackVerifaiUnlockClick = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trackVerifaiUnlockClick>>, TError,TrackVerifaiUnlockClickMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof trackVerifaiUnlockClick>>,
+        TError,
+        TrackVerifaiUnlockClickMutationVariables,
+        TContext
+      > => {
+      return useMutation(getTrackVerifaiUnlockClickMutationOptions(options), queryClient);
+    }
+
 export const getDemoUnlockVerifaiReportUrl = (ideaId: string,) => {
 
 
@@ -1323,16 +1399,31 @@ export const getDemoUnlockVerifaiReportUrl = (ideaId: string,) => {
 }
 
 /**
- * @summary Unlock a full report for development demos without taking payment
+ * @summary Unlock a full report for product research without taking payment
  */
-export const demoUnlockVerifaiReport = async (ideaId: string, options?: Parameters<typeof customFetch>[1]): Promise<DemoUnlockResponse> => {
+export const demoUnlockVerifaiReport = async (ideaId: string,
+    demoUnlockInput: DemoUnlockInput, options?: Parameters<typeof customFetch>[1]): Promise<DemoUnlockResponse> => {
 
-  return customFetch<DemoUnlockResponse>(getDemoUnlockVerifaiReportUrl(ideaId),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DemoUnlockResponse>(getDemoUnlockVerifaiReportUrl(ideaId),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(demoUnlockInput)
   }
 );}
 
@@ -1357,9 +1448,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof demoUnlockVerifaiReport>>, DemoUnlockVerifaiReportMutationVariables> = (props) => {
-          const {ideaId} = props ?? {};
+          const {ideaId,data} = props ?? {};
 
-          return  demoUnlockVerifaiReport(ideaId,requestOptions)
+          return  demoUnlockVerifaiReport(ideaId,data,requestOptions)
         }
 
 
@@ -1370,12 +1461,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type DemoUnlockVerifaiReportMutationResult = NonNullable<Awaited<ReturnType<typeof demoUnlockVerifaiReport>>>
-
+    export type DemoUnlockVerifaiReportMutationBody = BodyType<DemoUnlockInput>
     export type DemoUnlockVerifaiReportMutationError = ErrorType<void>
-    export type DemoUnlockVerifaiReportMutationVariables = {ideaId: string}
+    export type DemoUnlockVerifaiReportMutationVariables = {ideaId: string;data: BodyType<DemoUnlockInput>}
 
     /**
- * @summary Unlock a full report for development demos without taking payment
+ * @summary Unlock a full report for product research without taking payment
  */
 export const useDemoUnlockVerifaiReport = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof demoUnlockVerifaiReport>>, TError,DemoUnlockVerifaiReportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}

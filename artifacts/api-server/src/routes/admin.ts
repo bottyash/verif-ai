@@ -1,4 +1,4 @@
-import { and, count, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, inArray } from "drizzle-orm";
 import { Router, type IRouter } from "express";
 import {
   GetVerifaiAdminOverviewResponse,
@@ -10,8 +10,10 @@ import {
 import {
   db,
   ideasTable,
+  reportPayIntentsTable,
   reportUnlockEventsTable,
   validationReportsTable,
+  verifaiPaymentsTable,
 } from "@workspace/db";
 import { clerkClient } from "@clerk/express";
 import { requireAuth } from "../middlewares/requireAuth";
@@ -22,35 +24,74 @@ const router: IRouter = Router();
 router.use("/verifai/admin", requireAuth, requireAdmin);
 
 router.get("/verifai/admin/overview", async (_req, res): Promise<void> => {
-  const [users, [reportTotals], [freeReportTotals], [unlockClicks], [unlockCompletions]] =
-    await Promise.all([
-      clerkClient.users.getUserList({ limit: 1 }),
-      db.select({ value: count() }).from(validationReportsTable),
-      db.select({ value: count() })
-        .from(validationReportsTable)
-        .where(eq(validationReportsTable.isFullReport, false)),
-      db.select({ value: count() })
-        .from(reportUnlockEventsTable)
-        .where(eq(reportUnlockEventsTable.eventType, "unlock_clicked")),
-      db.select({ value: count() })
-        .from(reportUnlockEventsTable)
-        .where(eq(reportUnlockEventsTable.eventType, "unlock_completed")),
-    ]);
+  const [
+    users,
+    [reportTotals],
+    [freeReportTotals],
+    [unlockClicks],
+    [demoUnlocks],
+    [yesResponses],
+    [maybeResponses],
+    [noResponses],
+    [skipResponses],
+    [checkoutAttempts],
+    [paymentCompletions],
+  ] = await Promise.all([
+    clerkClient.users.getUserList({ limit: 1 }),
+    db.select({ value: count() }).from(validationReportsTable),
+    db.select({ value: count() })
+      .from(validationReportsTable)
+      .where(eq(validationReportsTable.isFullReport, false)),
+    db.select({ value: count() })
+      .from(reportUnlockEventsTable)
+      .where(eq(reportUnlockEventsTable.eventType, "unlock_offer_clicked")),
+    db.select({ value: count() })
+      .from(reportUnlockEventsTable)
+      .where(inArray(reportUnlockEventsTable.eventType, ["demo_unlocked", "unlock_completed"])),
+    db.select({ value: count() })
+      .from(reportPayIntentsTable)
+      .where(eq(reportPayIntentsTable.response, "yes")),
+    db.select({ value: count() })
+      .from(reportPayIntentsTable)
+      .where(eq(reportPayIntentsTable.response, "maybe")),
+    db.select({ value: count() })
+      .from(reportPayIntentsTable)
+      .where(eq(reportPayIntentsTable.response, "no")),
+    db.select({ value: count() })
+      .from(reportPayIntentsTable)
+      .where(eq(reportPayIntentsTable.response, "skip")),
+    db.select({ value: count() }).from(verifaiPaymentsTable),
+    db.select({ value: count() })
+      .from(verifaiPaymentsTable)
+      .where(eq(verifaiPaymentsTable.status, "PAID")),
+  ]);
 
-  const clickCount = unlockClicks.value;
-  const completedCount = unlockCompletions.value;
-  const unlockConversionRate = clickCount === 0
+  const intentAnswerCount = yesResponses.value + maybeResponses.value + noResponses.value;
+  const paymentAttemptCount = checkoutAttempts.value;
+  const paymentCompletedCount = paymentCompletions.value;
+  const paymentConversionRate = paymentAttemptCount === 0
+    ? null
+    : Math.round((paymentCompletedCount / paymentAttemptCount) * 1000) / 10;
+  const payIntentYesRate = intentAnswerCount === 0
     ? 0
-    : Math.round((completedCount / clickCount) * 1000) / 10;
+    : Math.round((yesResponses.value / intentAnswerCount) * 1000) / 10;
 
   res.json(
     GetVerifaiAdminOverviewResponse.parse({
       userCount: users.totalCount,
       reportCount: reportTotals.value,
       freeOnlyReportCount: freeReportTotals.value,
-      unlockClickCount: clickCount,
-      unlockCompletedCount: completedCount,
-      unlockConversionRate,
+      unlockClickCount: unlockClicks.value,
+      demoUnlockCount: demoUnlocks.value,
+      payIntentAnswerCount: intentAnswerCount,
+      payIntentYesCount: yesResponses.value,
+      payIntentMaybeCount: maybeResponses.value,
+      payIntentNoCount: noResponses.value,
+      payIntentSkipCount: skipResponses.value,
+      payIntentYesRate,
+      checkoutAttemptCount: paymentAttemptCount,
+      paymentCompletedCount,
+      paymentConversionRate,
     }),
   );
 });
@@ -151,6 +192,8 @@ router.get("/verifai/admin/reports/:reportId", async (req, res): Promise<void> =
   res.json(
     GetVerifaiAdminReportResponse.parse({
       ...report,
+      headlineSnapshot: report.headlineSnapshot ?? null,
+      paidDetails: report.paidDetails ?? null,
       scoreHistory,
       generatedAt: report.generatedAt.toISOString(),
       unlockedAt: report.unlockedAt?.toISOString() ?? null,

@@ -6,6 +6,7 @@ import {
   CreateVerifaiIdeaBody,
   CreateVerifaiIdeaResponse,
   CreateVerifaiPaymentResponse,
+  DemoUnlockVerifaiReportBody,
   DemoUnlockVerifaiReportResponse,
   GetVerifaiCheckoutStatusResponse,
   GenerateVerifaiQuestionsParams,
@@ -26,12 +27,14 @@ import {
   SendVerifaiMessageBody,
   SendVerifaiMessageParams,
   SendVerifaiMessageResponse,
+  TrackVerifaiUnlockClickResponse,
 } from "@workspace/api-zod";
 import {
   conversations,
   db,
   ideasTable,
   messages,
+  reportPayIntentsTable,
   reportUnlockEventsTable,
   verifaiPaymentsTable,
   validationReportsTable,
@@ -47,6 +50,7 @@ import {
 } from "../../lib/pinelabs";
 
 const router: IRouter = Router();
+const VERIFAI_REPORT_PRICE_INR = 20;
 router.use("/verifai", requireAuth);
 
 const tierContent = [
@@ -201,8 +205,8 @@ function publicReport(
     sections: full ? report.sections : [],
     comparisons: full ? report.comparisons : [],
     nextSteps: full ? report.nextSteps : [],
-    headlineSnapshot: report.headlineSnapshot,
-    paidDetails: full ? report.paidDetails : null,
+    headlineSnapshot: report.headlineSnapshot ?? null,
+    paidDetails: full ? report.paidDetails ?? null : null,
     scoreHistory: full
       ? scoreHistory.map((entry) => ({
           score: entry.score,
@@ -520,11 +524,6 @@ router.get("/verifai/ideas/:ideaId/report", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Idea not found." });
     return;
   }
-  await db.insert(reportUnlockEventsTable).values({
-    ownerId,
-    ideaId: idea.id,
-    eventType: "unlock_clicked",
-  });
   const [report] = await db
     .select()
     .from(validationReportsTable)
@@ -561,18 +560,14 @@ router.get("/verifai/ideas/:ideaId/checkout-status", async (req, res): Promise<v
     GetVerifaiCheckoutStatusResponse.parse({
       provider: "pinelabs",
       configured: process.env.VERIFAI_PAYMENT_GATEWAY_ENABLED === "true" && isPineLabsConfigured(),
-      amount: 20,
+      amount: VERIFAI_REPORT_PRICE_INR,
       currency: "INR",
       unlocked: Boolean(idea.premiumUnlockedAt),
     }),
   );
 });
 
-router.post("/verifai/ideas/:ideaId/demo-unlock", async (req, res): Promise<void> => {
-  if (process.env.NODE_ENV !== "development") {
-    res.status(403).json({ error: "Demo unlock is available in development only." });
-    return;
-  }
+router.post("/verifai/ideas/:ideaId/unlock-click", async (req, res): Promise<void> => {
   const params = GetVerifaiIdeaParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -591,10 +586,73 @@ router.post("/verifai/ideas/:ideaId/demo-unlock", async (req, res): Promise<void
     .orderBy(desc(validationReportsTable.generatedAt))
     .limit(1);
   if (!report) {
+    res.status(404).json({ error: "Generate a report before using the demo unlock." });
+    return;
+  }
+  await db.insert(reportUnlockEventsTable).values({
+    ownerId,
+    ideaId: idea.id,
+    eventType: "unlock_offer_clicked",
+  });
+  res.json(TrackVerifaiUnlockClickResponse.parse({ clicked: true }));
+});
+
+router.post("/verifai/ideas/:ideaId/demo-unlock", async (req, res): Promise<void> => {
+  const params = GetVerifaiIdeaParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const body = DemoUnlockVerifaiReportBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+  const ownerId = ownerIdOf(req as AuthenticatedRequest);
+  const idea = await findIdea(params.data.ideaId, ownerId);
+  if (!idea) {
+    res.status(404).json({ error: "Idea not found." });
+    return;
+  }
+  const [report] = await db
+    .select({ id: validationReportsTable.id })
+    .from(validationReportsTable)
+    .where(and(eq(validationReportsTable.ideaId, idea.id), eq(validationReportsTable.ownerId, ownerId)))
+    .orderBy(desc(validationReportsTable.generatedAt))
+    .limit(1);
+  if (!report) {
     res.status(409).json({ error: "Generate a report before using the demo unlock." });
     return;
   }
+  if (idea.premiumUnlockedAt) {
+    res.json(
+      DemoUnlockVerifaiReportResponse.parse({
+        ideaId: idea.id,
+        unlocked: true,
+        demo: true,
+        willingnessToPay: null,
+        testedPriceInr: VERIFAI_REPORT_PRICE_INR,
+      }),
+    );
+    return;
+  }
   await db.transaction(async (tx) => {
+    await tx
+      .insert(reportPayIntentsTable)
+      .values({
+        ownerId,
+        ideaId: idea.id,
+        response: body.data.willingnessToPay,
+        testedPriceInr: VERIFAI_REPORT_PRICE_INR,
+      })
+      .onConflictDoUpdate({
+        target: [reportPayIntentsTable.ownerId, reportPayIntentsTable.ideaId],
+        set: {
+          response: body.data.willingnessToPay,
+          testedPriceInr: VERIFAI_REPORT_PRICE_INR,
+          updatedAt: new Date(),
+        },
+      });
     await tx
       .update(ideasTable)
       .set({ premiumUnlockedAt: idea.premiumUnlockedAt ?? new Date() })
@@ -606,7 +664,7 @@ router.post("/verifai/ideas/:ideaId/demo-unlock", async (req, res): Promise<void
     await tx.insert(reportUnlockEventsTable).values({
       ownerId,
       ideaId: idea.id,
-      eventType: "unlock_completed",
+      eventType: "demo_unlocked",
     });
   });
   res.json(
@@ -614,6 +672,8 @@ router.post("/verifai/ideas/:ideaId/demo-unlock", async (req, res): Promise<void
       ideaId: idea.id,
       unlocked: true,
       demo: true,
+      willingnessToPay: body.data.willingnessToPay === "skip" ? null : body.data.willingnessToPay,
+      testedPriceInr: VERIFAI_REPORT_PRICE_INR,
     }),
   );
 });
@@ -674,7 +734,7 @@ router.post("/verifai/ideas/:ideaId/payments", async (req, res): Promise<void> =
         paymentId: pendingPayment.id,
         checkoutUrl: pendingPayment.checkoutUrl,
         status: pendingPayment.status,
-        amount: 20,
+        amount: VERIFAI_REPORT_PRICE_INR,
         currency: "INR",
       }),
     );
@@ -727,7 +787,7 @@ router.post("/verifai/ideas/:ideaId/payments", async (req, res): Promise<void> =
         paymentId: payment.id,
         checkoutUrl: data.challenge_url,
         status: data.status ?? "CREATED",
-        amount: 20,
+        amount: VERIFAI_REPORT_PRICE_INR,
         currency: "INR",
       }),
     );
@@ -772,7 +832,7 @@ router.get("/verifai/ideas/:ideaId/payments/:paymentId", async (req, res): Promi
     res.status(404).json({ error: "Payment not found." });
     return;
   }
-  if (idea.premiumUnlockedAt || payment.status === "PAID") {
+  if (payment.status === "PAID") {
     res.json(
       GetVerifaiPaymentStatusResponse.parse({
         paymentId: payment.id,

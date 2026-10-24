@@ -388,10 +388,44 @@ export interface CheckoutStatus {
   unlocked: boolean;
 }
 
+export const UnlockClickResponseValue = {
+  clicked: true,
+} as const;
+export type UnlockClickResponse = typeof UnlockClickResponseValue;
+
+export type DemoUnlockInputWillingnessToPay = typeof DemoUnlockInputWillingnessToPay[keyof typeof DemoUnlockInputWillingnessToPay];
+
+
+export const DemoUnlockInputWillingnessToPay = {
+  yes: 'yes',
+  maybe: 'maybe',
+  no: 'no',
+  skip: 'skip',
+} as const;
+
+export interface DemoUnlockInput {
+  willingnessToPay: DemoUnlockInputWillingnessToPay;
+}
+
+/**
+ * @nullable
+ */
+export type DemoUnlockResponseWillingnessToPay = typeof DemoUnlockResponseWillingnessToPay[keyof typeof DemoUnlockResponseWillingnessToPay] | null;
+
+
+export const DemoUnlockResponseWillingnessToPay = {
+  yes: 'yes',
+  maybe: 'maybe',
+  no: 'no',
+} as const;
+
 export interface DemoUnlockResponse {
   ideaId: string;
   unlocked: true;
   demo: true;
+  /** @nullable */
+  willingnessToPay: DemoUnlockResponseWillingnessToPay;
+  testedPriceInr: 20;
 }
 
 export type CheckoutSessionCurrency = typeof CheckoutSessionCurrency[keyof typeof CheckoutSessionCurrency];
@@ -436,12 +470,32 @@ export interface AdminOverview {
   /** @minimum 0 */
   unlockClickCount: number;
   /** @minimum 0 */
-  unlockCompletedCount: number;
+  demoUnlockCount: number;
+  /** @minimum 0 */
+  payIntentAnswerCount: number;
+  /** @minimum 0 */
+  payIntentYesCount: number;
+  /** @minimum 0 */
+  payIntentMaybeCount: number;
+  /** @minimum 0 */
+  payIntentNoCount: number;
+  /** @minimum 0 */
+  payIntentSkipCount: number;
   /**
      * @minimum 0
      * @maximum 100
      */
-  unlockConversionRate: number;
+  payIntentYesRate: number;
+  /** @minimum 0 */
+  checkoutAttemptCount: number;
+  /** @minimum 0 */
+  paymentCompletedCount: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     * @nullable
+     */
+  paymentConversionRate: number | null;
 }
 
 export interface AdminReport {

@@ -37,6 +37,7 @@ import {
   useSaveVerifaiAnswers,
   useSendVerifaiMessage,
   useDemoUnlockVerifaiReport,
+  useTrackVerifaiUnlockClick,
 } from '@workspace/api-client-react';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, useParams } from 'wouter';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -350,9 +351,16 @@ function AdminDashboard() {
     { label: 'Registered users', value: count(overview.data.userCount), note: 'Accounts in VerifAI', icon: <Users size={17}/> },
     { label: 'Generated reports', value: count(overview.data.reportCount), note: 'All report snapshots', icon: <FileText size={17}/> },
     { label: 'Free-only reports', value: count(overview.data.freeOnlyReportCount), note: 'Not unlocked', icon: <LockKeyhole size={17}/> },
-    { label: 'Unlock clicks', value: count(overview.data.unlockClickCount), note: 'Unlock intent recorded', icon: <MousePointerClick size={17}/> },
-    { label: 'Unlocks completed', value: count(overview.data.unlockCompletedCount), note: 'Full access recorded', icon: <Check size={17}/> },
-    { label: 'Unlock conversion', value: `${overview.data.unlockConversionRate.toLocaleString('en-IN', { maximumFractionDigits: 1 })}%`, note: 'Completed / click rate', icon: <ArrowUpRight size={17}/> },
+    { label: 'Free unlock clicks', value: count(overview.data.unlockClickCount), note: 'Opened the research question', icon: <MousePointerClick size={17}/> },
+    { label: 'Free demo unlocks', value: count(overview.data.demoUnlockCount), note: 'Full access; no payment', icon: <Check size={17}/> },
+    { label: 'Would pay ₹20', value: count(overview.data.payIntentYesCount), note: 'Yes responses', icon: <ArrowUpRight size={17}/> },
+    { label: 'Might pay ₹20', value: count(overview.data.payIntentMaybeCount), note: 'Maybe responses', icon: <ArrowUpRight size={17}/> },
+    { label: 'Would not pay ₹20', value: count(overview.data.payIntentNoCount), note: 'No responses', icon: <ArrowUpRight size={17}/> },
+    { label: 'Skipped price question', value: count(overview.data.payIntentSkipCount), note: 'Chose free unlock without answering', icon: <MousePointerClick size={17}/> },
+    { label: 'Yes share', value: `${overview.data.payIntentYesRate.toLocaleString('en-IN', { maximumFractionDigits: 1 })}%`, note: `${count(overview.data.payIntentAnswerCount)} answered · yes / answered`, icon: <ArrowUpRight size={17}/> },
+    { label: 'Checkout attempts', value: count(overview.data.checkoutAttemptCount), note: 'Actual payment orders created', icon: <MousePointerClick size={17}/> },
+    { label: 'Verified payments', value: count(overview.data.paymentCompletedCount), note: 'Paid status verified by provider', icon: <Check size={17}/> },
+    { label: 'Payment conversion', value: overview.data.paymentConversionRate === null ? '—' : `${overview.data.paymentConversionRate.toLocaleString('en-IN', { maximumFractionDigits: 1 })}%`, note: 'Verified payments / checkout attempts', icon: <ArrowUpRight size={17}/> },
   ];
   const currentPage = reports.data.page;
   const totalPages = reports.data.totalPages;
@@ -614,17 +622,27 @@ function Report({finalView=false}:{finalView?:boolean}) {
   const idea=useGetVerifaiIdea(ideaId,{query:{enabled:!!ideaId,queryKey:getGetVerifaiIdeaQueryKey(ideaId)}});
   const run=useRunVerifaiAnalysis();
   const demoUnlock=useDemoUnlockVerifaiReport();
+  const trackUnlockClick=useTrackVerifaiUnlockClick();
   const queryClient=useQueryClient();
   const [,setLocation]=useLocation();
   const [demoError,setDemoError]=useState('');
+  const [intentDialogOpen,setIntentDialogOpen]=useState(false);
+  const [clickTrackingError,setClickTrackingError]=useState('');
   const generate=()=>run.mutate({ideaId},{onSuccess:()=>{void queryClient.invalidateQueries({queryKey:getGetVerifaiReportQueryKey(ideaId)});void queryClient.invalidateQueries({queryKey:getGetVerifaiDashboardQueryKey()});}});
-  const unlockForDemo=()=>{
+  const openResearchUnlock=()=>{
     setDemoError('');
-    demoUnlock.mutate({ideaId},{onSuccess:async()=>{
+    setClickTrackingError('');
+    setIntentDialogOpen(true);
+    trackUnlockClick.mutate({ideaId},{onError:()=>setClickTrackingError('We could not record this click, but you can still unlock the free research preview.')});
+  };
+  const unlockForDemo=(willingnessToPay:'yes'|'maybe'|'no'|'skip')=>{
+    setDemoError('');
+    demoUnlock.mutate({ideaId,data:{willingnessToPay}},{onSuccess:async()=>{
       await Promise.all([
         queryClient.invalidateQueries({queryKey:getGetVerifaiReportQueryKey(ideaId)}),
         queryClient.invalidateQueries({queryKey:getGetVerifaiIdeaQueryKey(ideaId)}),
       ]);
+      setIntentDialogOpen(false);
       setLocation(`/ideas/${ideaId}/final`);
     },onError:()=>setDemoError('The demo unlock did not go through. Your snapshot is unchanged; try once more.')});
   };
@@ -637,8 +655,8 @@ function Report({finalView=false}:{finalView?:boolean}) {
   const nextSteps=data.nextSteps??[];
   if(finalView&&!data.isFullReport) return <Shell title="Final results"><main className="page"><div className="empty-state"><div className="empty-symbol"><LockKeyhole size={22}/></div><h3>This report is still in preview mode.</h3><p>Use the demo unlock on the preview screen to open the final results. It will not process a payment.</p><Link href={`/ideas/${ideaId}/report`} className="btn btn-primary" data-testid="link-back-to-preview">Back to report preview</Link></div></main></Shell>;
   return <Shell title={finalView?'Final results':'Report preview'}><main className={`page ${data.isFullReport?'report-page-full':'report-page-preview'}`}>
-    <div className="page-header"><div><div className="eyebrow">{finalView?'DEMO UNLOCK · NO PAYMENT TAKEN':`A first look · Generated ${new Date(data.generatedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}`}</div><h1>{finalView?'Your full report':data.ideaName}</h1><p className="muted">{finalView?'The complete idea assessment is ready to explore.':'A quick signal on where the idea stands. Unlock the full read when you are ready.'}</p></div>{finalView?<Link href={`/ideas/${ideaId}/report`} className="btn btn-outline" data-testid="link-back-to-preview"><ArrowLeft size={15}/> Back to preview</Link>:<Link href={`/ideas/${ideaId}/questions`} className="btn btn-outline" data-testid="link-review-answers"><Layers3 size={15}/> Review my answers</Link>}</div>
-    {finalView&&<div className="notice" role="status" data-testid="status-demo-unlocked"><strong>Prototype mode.</strong> Full access is enabled for testing. No payment was taken.</div>}
+     <div className="page-header"><div><div className="eyebrow">{finalView?'FREE RESEARCH UNLOCK · NO PAYMENT TAKEN':`A first look · Generated ${new Date(data.generatedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}`}</div><h1>{finalView?'Your full report':data.ideaName}</h1><p className="muted">{finalView?'The complete idea assessment is ready to explore.':'A quick signal on where the idea stands. Unlock the full read when you are ready.'}</p></div>{finalView?<Link href={`/ideas/${ideaId}/report`} className="btn btn-outline" data-testid="link-back-to-preview"><ArrowLeft size={15}/> Back to preview</Link>:<Link href={`/ideas/${ideaId}/questions`} className="btn btn-outline" data-testid="link-review-answers"><Layers3 size={15}/> Review my answers</Link>}</div>
+     {finalView&&<div className="notice" role="status" data-testid="status-demo-unlocked"><strong>Research preview.</strong> Full access is free for this test. No payment was taken.</div>}
     <section className="report-score" style={{['--score' as any]:`${score*3.6}deg`}} data-testid="report-score">
       <div className="score-ring"><div className="score-inner"><div className="score-number">{score}</div><div className="score-denom">OUT OF 100</div></div></div>
       <div><div className="verdict">{data.verdict}</div>{data.isFullReport&&<h2>{data.summary || 'A starting point for a better-informed next step.'}</h2>}<p>A directional signal based on what you shared — not a prediction of success.</p></div>
@@ -657,11 +675,27 @@ function Report({finalView=false}:{finalView?:boolean}) {
         <article className="unlock-benefit"><span>03 / YOUR NEXT MOVE</span><h3>Leave with a sharper plan.</h3><p>AI framing and execution suggestions, prioritized experiments, and founder-coach chat.</p></article>
       </div>
       <div className="unlock-action">
-        <div><strong>Prototype unlock · ₹20 planned price</strong><p>No charge in this demo. Payment gateway and payment methods will be connected later.</p></div>
-        {import.meta.env.DEV?<button className="btn btn-primary" onClick={unlockForDemo} disabled={demoUnlock.isPending} data-testid="button-demo-unlock">{demoUnlock.isPending?'Opening your report…':'Simulate payment · ₹20 (no charge)'} <ArrowRight size={16}/></button>:<button className="btn btn-outline" disabled data-testid="button-payment-coming-soon">Payment options coming later</button>}
+        <div><strong>Full report · ₹20 test price</strong><p>Unlock free in this research preview. No payment is collected.</p></div>
+        <button className="btn btn-primary" onClick={openResearchUnlock} disabled={demoUnlock.isPending} data-testid="button-demo-unlock">{demoUnlock.isPending?'Opening your report…':'Try the full report free'} <ArrowRight size={16}/></button>
       </div>
-      {demoError&&<div className="error-box" role="alert" data-testid="error-demo-unlock">{demoError}</div>}
+      {demoError&&!intentDialogOpen&&<div className="error-box" role="alert" data-testid="error-demo-unlock">{demoError}</div>}
     </section>}
+    {intentDialogOpen&&<div className="research-modal-backdrop">
+      <section className="research-modal" role="dialog" aria-modal="true" aria-labelledby="research-modal-title" aria-describedby="research-modal-description">
+        <button className="research-modal-close" type="button" aria-label="Close research question" disabled={demoUnlock.isPending} onClick={()=>setIntentDialogOpen(false)}>×</button>
+        <div className="eyebrow">OPTIONAL · PRODUCT RESEARCH</div>
+        <h2 id="research-modal-title">Would you pay ₹20 for the full report?</h2>
+        <p id="research-modal-description">We’ll record your answer for product research. The full report opens free either way, and no payment is taken.</p>
+        {clickTrackingError&&<p className="research-modal-tracking-note" role="status">{clickTrackingError}</p>}
+        <div className="research-intent-options">
+          <button className="btn btn-outline" type="button" onClick={()=>unlockForDemo('yes')} disabled={demoUnlock.isPending} data-testid="button-pay-intent-yes">Yes, at ₹20</button>
+          <button className="btn btn-outline" type="button" onClick={()=>unlockForDemo('maybe')} disabled={demoUnlock.isPending} data-testid="button-pay-intent-maybe">Maybe</button>
+          <button className="btn btn-outline" type="button" onClick={()=>unlockForDemo('no')} disabled={demoUnlock.isPending} data-testid="button-pay-intent-no">No, not at ₹20</button>
+        </div>
+        <button className="research-skip-button" type="button" onClick={()=>unlockForDemo('skip')} disabled={demoUnlock.isPending} data-testid="button-pay-intent-skip">{demoUnlock.isPending?'Opening free report…':'Skip question and unlock free'}</button>
+        {demoError&&<div className="error-box" role="alert" data-testid="error-demo-unlock-dialog">{demoError}</div>}
+      </section>
+    </div>}
     {data.isFullReport&&<>
       {data.paidDetails
         ? <PaidDetailsReadout details={data.paidDetails} history={data.scoreHistory ?? []}/>

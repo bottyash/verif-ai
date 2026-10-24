@@ -271,6 +271,16 @@ button { cursor: pointer; }
 .unlock-action { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-top:20px; padding-top:18px; border-top:1px solid #4a453b; }
 .unlock-action strong { font-size:13px; }
 .unlock-action p { margin:5px 0 0; color:#c5bdb0; font-size:11px; line-height:1.5; }
+.research-modal-backdrop { position:fixed; inset:0; z-index:1200; display:grid; place-items:center; padding:20px; background:rgba(31,29,25,.68); }
+.research-modal { position:relative; width:min(100%,560px); padding:clamp(24px,5vw,40px); color:#29251f; background:#fbf7ee; border:1px solid #ded5c7; box-shadow:0 24px 90px rgba(0,0,0,.28); }
+.research-modal h2 { max-width:430px; margin:12px 36px 10px 0; font:600 clamp(28px,5vw,38px)/1.04 var(--app-font-serif); letter-spacing:-.05em; }
+.research-modal > p { max-width:470px; margin:0; color:#696257; font-size:14px; line-height:1.6; }
+.research-modal-close { position:absolute; top:15px; right:15px; display:grid; place-items:center; width:38px; height:38px; color:#39342e; background:transparent; border:1px solid #d8d0c2; border-radius:50%; font-size:24px; line-height:1; cursor:pointer; }
+.research-intent-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; margin-top:23px; }
+.research-intent-options .btn { justify-content:center; min-height:48px; padding:9px; font-size:13px; }
+.research-skip-button { display:block; margin:15px auto 0; padding:8px 12px; color:#6d6256; background:transparent; border:0; text-decoration:underline; text-underline-offset:3px; font:inherit; font-size:13px; cursor:pointer; }
+.research-skip-button:disabled,.research-intent-options .btn:disabled,.research-modal-close:disabled { opacity:.55; cursor:not-allowed; }
+.research-modal-tracking-note { margin-top:12px !important; padding:9px 11px; color:#775a27 !important; background:#f5eddc; border:1px solid #e2d4b8; font-size:12px !important; }
 .report-page-full .notice[data-testid="status-demo-unlocked"] { margin:0 0 22px; }
 .snapshot-areas,.ai-refinement,.full-report-detail { margin-top:27px; }
 .snapshot-section-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:18px; margin-bottom:15px; }
@@ -612,5 +622,8 @@ button { cursor: pointer; }
   .quick-ratings h3 { align-items:flex-start; flex-direction:column; }
   .teaser-strip { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .paid-breakdown,.score-history,.action-plan,.funding-readiness { padding:16px; }
+  .research-intent-options { grid-template-columns:1fr; }
+  .unlock-action { align-items:stretch; flex-direction:column; }
+  .unlock-action .btn { width:100%; justify-content:center; }
   .legacy-report-note { align-items:flex-start; flex-direction:column; }
 }

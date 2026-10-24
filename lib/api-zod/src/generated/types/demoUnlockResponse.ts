@@ -5,9 +5,13 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { DemoUnlockResponseWillingnessToPay } from './demoUnlockResponseWillingnessToPay';
 
 export interface DemoUnlockResponse {
   ideaId: string;
   unlocked: true;
   demo: true;
+  /** @nullable */
+  willingnessToPay: DemoUnlockResponseWillingnessToPay;
+  testedPriceInr: 20;
 }

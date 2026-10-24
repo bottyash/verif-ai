@@ -4,7 +4,11 @@ import { z } from "zod/v4";
 
 import { ideasTable } from "./ideas";
 
-export type ReportUnlockEventType = "unlock_clicked" | "unlock_completed";
+export type ReportUnlockEventType =
+  | "unlock_clicked"
+  | "unlock_completed"
+  | "unlock_offer_clicked"
+  | "demo_unlocked";
 
 export const reportUnlockEventsTable = pgTable(
   "verifai_report_unlock_events",

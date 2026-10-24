@@ -3,8 +3,8 @@ name: VerifAI prototype access
 description: Payment and report-unlock behavior while VerifAI is a proof of concept.
 ---
 
-While VerifAI is a prototype, report access should be testable through an explicitly labeled no-charge demo unlock. Real payment checkout must remain disabled until the payment gateway is intentionally enabled.
+While VerifAI is a prototype, an explicitly labeled no-charge research unlock should be available in development and production. Ask an optional willingness-to-pay question at the displayed test price, and keep those answers separate from verified payments. Real payment checkout stays disabled until the gateway is intentionally enabled.
 
-**Why:** the user said this is a proof of concept and asked to add a payment gateway later.
+**Why:** the user wants real users to try the full report and to measure actual price interest before enabling payment.
 
-**How to apply:** keep demo access separate from provider checkout, make it development-only, and do not send real payment requests during the prototype.
+**How to apply:** make the no-charge path available in all environments, clearly disclose that no payment is taken, and report survey answers, demo unlocks, checkout attempts, and verified payments as distinct metrics.

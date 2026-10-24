@@ -16,10 +16,30 @@ export interface AdminOverview {
   /** @minimum 0 */
   unlockClickCount: number;
   /** @minimum 0 */
-  unlockCompletedCount: number;
+  demoUnlockCount: number;
+  /** @minimum 0 */
+  payIntentAnswerCount: number;
+  /** @minimum 0 */
+  payIntentYesCount: number;
+  /** @minimum 0 */
+  payIntentMaybeCount: number;
+  /** @minimum 0 */
+  payIntentNoCount: number;
+  /** @minimum 0 */
+  payIntentSkipCount: number;
   /**
      * @minimum 0
      * @maximum 100
      */
-  unlockConversionRate: number;
+  payIntentYesRate: number;
+  /** @minimum 0 */
+  checkoutAttemptCount: number;
+  /** @minimum 0 */
+  paymentCompletedCount: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     * @nullable
+     */
+  paymentConversionRate: number | null;
 }

@@ -28,10 +28,27 @@ export const getVerifaiAdminOverviewResponseFreeOnlyReportCountMin = 0;
 
 export const getVerifaiAdminOverviewResponseUnlockClickCountMin = 0;
 
-export const getVerifaiAdminOverviewResponseUnlockCompletedCountMin = 0;
+export const getVerifaiAdminOverviewResponseDemoUnlockCountMin = 0;
 
-export const getVerifaiAdminOverviewResponseUnlockConversionRateMin = 0;
-export const getVerifaiAdminOverviewResponseUnlockConversionRateMax = 100;
+export const getVerifaiAdminOverviewResponsePayIntentAnswerCountMin = 0;
+
+export const getVerifaiAdminOverviewResponsePayIntentYesCountMin = 0;
+
+export const getVerifaiAdminOverviewResponsePayIntentMaybeCountMin = 0;
+
+export const getVerifaiAdminOverviewResponsePayIntentNoCountMin = 0;
+
+export const getVerifaiAdminOverviewResponsePayIntentSkipCountMin = 0;
+
+export const getVerifaiAdminOverviewResponsePayIntentYesRateMin = 0;
+export const getVerifaiAdminOverviewResponsePayIntentYesRateMax = 100;
+
+export const getVerifaiAdminOverviewResponseCheckoutAttemptCountMin = 0;
+
+export const getVerifaiAdminOverviewResponsePaymentCompletedCountMin = 0;
+
+export const getVerifaiAdminOverviewResponsePaymentConversionRateMin = 0;
+export const getVerifaiAdminOverviewResponsePaymentConversionRateMax = 100;
 
 
 
@@ -40,8 +57,16 @@ export const GetVerifaiAdminOverviewResponse = zod.object({
   "reportCount": zod.number().int().min(getVerifaiAdminOverviewResponseReportCountMin),
   "freeOnlyReportCount": zod.number().int().min(getVerifaiAdminOverviewResponseFreeOnlyReportCountMin),
   "unlockClickCount": zod.number().int().min(getVerifaiAdminOverviewResponseUnlockClickCountMin),
-  "unlockCompletedCount": zod.number().int().min(getVerifaiAdminOverviewResponseUnlockCompletedCountMin),
-  "unlockConversionRate": zod.number().min(getVerifaiAdminOverviewResponseUnlockConversionRateMin).max(getVerifaiAdminOverviewResponseUnlockConversionRateMax)
+  "demoUnlockCount": zod.number().int().min(getVerifaiAdminOverviewResponseDemoUnlockCountMin),
+  "payIntentAnswerCount": zod.number().int().min(getVerifaiAdminOverviewResponsePayIntentAnswerCountMin),
+  "payIntentYesCount": zod.number().int().min(getVerifaiAdminOverviewResponsePayIntentYesCountMin),
+  "payIntentMaybeCount": zod.number().int().min(getVerifaiAdminOverviewResponsePayIntentMaybeCountMin),
+  "payIntentNoCount": zod.number().int().min(getVerifaiAdminOverviewResponsePayIntentNoCountMin),
+  "payIntentSkipCount": zod.number().int().min(getVerifaiAdminOverviewResponsePayIntentSkipCountMin),
+  "payIntentYesRate": zod.number().min(getVerifaiAdminOverviewResponsePayIntentYesRateMin).max(getVerifaiAdminOverviewResponsePayIntentYesRateMax),
+  "checkoutAttemptCount": zod.number().int().min(getVerifaiAdminOverviewResponseCheckoutAttemptCountMin),
+  "paymentCompletedCount": zod.number().int().min(getVerifaiAdminOverviewResponsePaymentCompletedCountMin),
+  "paymentConversionRate": zod.number().min(getVerifaiAdminOverviewResponsePaymentConversionRateMin).max(getVerifaiAdminOverviewResponsePaymentConversionRateMax).nullable()
 })
 
 
@@ -721,16 +746,34 @@ export const GetVerifaiCheckoutStatusResponse = zod.object({
 
 
 /**
- * @summary Unlock a full report for development demos without taking payment
+ * @summary Record a click on the no-charge research unlock
+ */
+export const TrackVerifaiUnlockClickParams = zod.object({
+  "ideaId": zod.coerce.string()
+})
+
+export const TrackVerifaiUnlockClickResponse = zod.object({
+  "clicked": zod.literal(true)
+})
+
+
+/**
+ * @summary Unlock a full report for product research without taking payment
  */
 export const DemoUnlockVerifaiReportParams = zod.object({
   "ideaId": zod.coerce.string()
 })
 
+export const DemoUnlockVerifaiReportBody = zod.object({
+  "willingnessToPay": zod.enum(['yes', 'maybe', 'no', 'skip'])
+})
+
 export const DemoUnlockVerifaiReportResponse = zod.object({
   "ideaId": zod.string(),
   "unlocked": zod.literal(true),
-  "demo": zod.literal(true)
+  "demo": zod.literal(true),
+  "willingnessToPay": zod.union([zod.literal('yes'),zod.literal('maybe'),zod.literal('no'),zod.literal(null)]).nullable(),
+  "testedPriceInr": zod.literal(20)
 })
 
 

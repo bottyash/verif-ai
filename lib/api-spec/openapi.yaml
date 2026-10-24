@@ -266,11 +266,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CheckoutStatus"
-  /verifai/ideas/{ideaId}/demo-unlock:
+  /verifai/ideas/{ideaId}/unlock-click:
     post:
-      operationId: demoUnlockVerifaiReport
+      operationId: trackVerifaiUnlockClick
       tags: [verifai]
-      summary: Unlock a full report for development demos without taking payment
+      summary: Record a click on the no-charge research unlock
       parameters:
         - name: ideaId
           in: path
@@ -279,13 +279,37 @@ paths:
             type: string
       responses:
         "200":
-          description: Demo report unlocked
+          description: Unlock offer click recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnlockClickResponse"
+        "404":
+          description: Idea or report not found
+  /verifai/ideas/{ideaId}/demo-unlock:
+    post:
+      operationId: demoUnlockVerifaiReport
+      tags: [verifai]
+      summary: Unlock a full report for product research without taking payment
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoUnlockInput"
+      responses:
+        "200":
+          description: No-charge report unlocked and optional price intent stored
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/DemoUnlockResponse"
-        "403":
-          description: Demo unlock is unavailable outside development
         "404":
           description: Idea not found
         "409":
@@ -709,13 +733,29 @@ components:
         amount: { type: integer, const: 20 }
         currency: { type: string, enum: [INR] }
         unlocked: { type: boolean }
+    UnlockClickResponse:
+      type: object
+      required: [clicked]
+      properties:
+        clicked: { type: boolean, const: true }
+    DemoUnlockInput:
+      type: object
+      required: [willingnessToPay]
+      properties:
+        willingnessToPay:
+          type: string
+          enum: [yes, maybe, no, skip]
     DemoUnlockResponse:
       type: object
-      required: [ideaId, unlocked, demo]
+      required: [ideaId, unlocked, demo, willingnessToPay, testedPriceInr]
       properties:
         ideaId: { type: string }
         unlocked: { type: boolean, const: true }
         demo: { type: boolean, const: true }
+        willingnessToPay:
+          type: ["string", "null"]
+          enum: [yes, maybe, no, null]
+        testedPriceInr: { type: integer, const: 20 }
     CheckoutSession:
       type: object
       required: [paymentId, checkoutUrl, status, amount, currency]
@@ -736,14 +776,22 @@ components:
         unlocked: { type: boolean }
     AdminOverview:
       type: object
-      required: [userCount, reportCount, freeOnlyReportCount, unlockClickCount, unlockCompletedCount, unlockConversionRate]
+      required: [userCount, reportCount, freeOnlyReportCount, unlockClickCount, demoUnlockCount, payIntentAnswerCount, payIntentYesCount, payIntentMaybeCount, payIntentNoCount, payIntentSkipCount, payIntentYesRate, checkoutAttemptCount, paymentCompletedCount, paymentConversionRate]
       properties:
         userCount: { type: integer, minimum: 0 }
         reportCount: { type: integer, minimum: 0 }
         freeOnlyReportCount: { type: integer, minimum: 0 }
         unlockClickCount: { type: integer, minimum: 0 }
-        unlockCompletedCount: { type: integer, minimum: 0 }
-        unlockConversionRate: { type: number, minimum: 0, maximum: 100 }
+        demoUnlockCount: { type: integer, minimum: 0 }
+        payIntentAnswerCount: { type: integer, minimum: 0 }
+        payIntentYesCount: { type: integer, minimum: 0 }
+        payIntentMaybeCount: { type: integer, minimum: 0 }
+        payIntentNoCount: { type: integer, minimum: 0 }
+        payIntentSkipCount: { type: integer, minimum: 0 }
+        payIntentYesRate: { type: number, minimum: 0, maximum: 100 }
+        checkoutAttemptCount: { type: integer, minimum: 0 }
+        paymentCompletedCount: { type: integer, minimum: 0 }
+        paymentConversionRate: { type: ["number", "null"], minimum: 0, maximum: 100 }
     AdminReport:
       type: object
       required: [id, ideaId, ideaName, ownerId, score, verdict, generatedAt, isFullReport, unlockedAt]

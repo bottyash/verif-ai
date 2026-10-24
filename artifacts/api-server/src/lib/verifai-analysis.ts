@@ -66,7 +66,7 @@ const synthesisSchema = z.object({
       relevantPrograms: z.array(z.string().min(1)).min(1).max(4),
       pitchGaps: z.array(z.string().min(1)).min(1).max(4),
       valuationRange: z.string().nullable(),
-      likelyQuestions: z.array(z.string().min(1)).min(1).max(4),
+      likelyQuestions: z.array(z.string().min(1).max(500)).min(1).transform((items) => items.slice(0, 4)),
     }),
     actionPlan: z.object({
       thisWeek: z.array(z.string().min(1)).min(1).max(4),
@@ -198,7 +198,7 @@ Return exactly one JSON object with these keys and shapes:
     "goToMarket": ["string"],
     "riskRegister": [{"risk":"string","likelihood":"low|medium|high","impact":"low|medium|high","mitigation":"string"}],
     "legalCompliance": ["string"],
-    "fundingReadiness": {"score": 50, "investorFit": ["string"], "relevantPrograms": ["string"], "pitchGaps": ["string"], "valuationRange": "string or null", "likelyQuestions": ["string"]},
+    "fundingReadiness": {"score": 50, "investorFit": ["string"], "relevantPrograms": ["string"], "pitchGaps": ["string"], "valuationRange": "string or null", "likelyQuestions": ["up to four strings"]},
     "actionPlan": {"thisWeek":["string"],"thisMonth":["string"],"thisQuarter":["string"],"validationExperiments":["string"]}
   }
 }
