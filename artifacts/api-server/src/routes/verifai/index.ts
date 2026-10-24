@@ -32,6 +32,7 @@ import {
   db,
   ideasTable,
   messages,
+  reportUnlockEventsTable,
   verifaiPaymentsTable,
   validationReportsTable,
   type IdeaRecord,
@@ -498,6 +499,11 @@ router.get("/verifai/ideas/:ideaId/report", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Idea not found." });
     return;
   }
+  await db.insert(reportUnlockEventsTable).values({
+    ownerId,
+    ideaId: idea.id,
+    eventType: "unlock_clicked",
+  });
   const [report] = await db
     .select()
     .from(validationReportsTable)
@@ -568,6 +574,11 @@ router.post("/verifai/ideas/:ideaId/demo-unlock", async (req, res): Promise<void
       .update(validationReportsTable)
       .set({ isFullReport: true })
       .where(and(eq(validationReportsTable.ideaId, idea.id), eq(validationReportsTable.ownerId, ownerId)));
+    await tx.insert(reportUnlockEventsTable).values({
+      ownerId,
+      ideaId: idea.id,
+      eventType: "unlock_completed",
+    });
   });
   res.json(
     DemoUnlockVerifaiReportResponse.parse({

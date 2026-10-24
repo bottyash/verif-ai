@@ -232,6 +232,63 @@ export interface PaymentStatus {
   unlocked: boolean;
 }
 
+export interface AdminOverview {
+  /** @minimum 0 */
+  userCount: number;
+  /** @minimum 0 */
+  reportCount: number;
+  /** @minimum 0 */
+  freeOnlyReportCount: number;
+  /** @minimum 0 */
+  unlockClickCount: number;
+  /** @minimum 0 */
+  unlockCompletedCount: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  unlockConversionRate: number;
+}
+
+export interface AdminReport {
+  id: string;
+  ideaId: string;
+  ideaName: string;
+  ownerId: string;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  score: number;
+  verdict: string;
+  generatedAt: string;
+  isFullReport: boolean;
+  /** @nullable */
+  unlockedAt: string | null;
+}
+
+export type AdminReportDetail = AdminReport & {
+  summary: string;
+  sections: ReportSection[];
+  comparisons: string[];
+  nextSteps: string[];
+};
+
+export interface AdminReportPage {
+  items: AdminReport[];
+  /** @minimum 1 */
+  page: number;
+  /**
+     * @minimum 1
+     * @maximum 100
+     */
+  pageSize: number;
+  /** @minimum 0 */
+  total: number;
+  /** @minimum 0 */
+  totalPages: number;
+}
+
 export type MessageHistoryMessagesItemRole = typeof MessageHistoryMessagesItemRole[keyof typeof MessageHistoryMessagesItemRole];
 
 
@@ -258,4 +315,16 @@ export interface DashboardSummary {
   averageScore: number | null;
   recentIdeas: Idea[];
 }
+
+export type GetVerifaiAdminReportsParams = {
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+pageSize?: number;
+};
 

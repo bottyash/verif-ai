@@ -18,6 +18,121 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * @summary Get VerifAI administrator metrics
+ */
+export const getVerifaiAdminOverviewResponseUserCountMin = 0;
+
+export const getVerifaiAdminOverviewResponseReportCountMin = 0;
+
+export const getVerifaiAdminOverviewResponseFreeOnlyReportCountMin = 0;
+
+export const getVerifaiAdminOverviewResponseUnlockClickCountMin = 0;
+
+export const getVerifaiAdminOverviewResponseUnlockCompletedCountMin = 0;
+
+export const getVerifaiAdminOverviewResponseUnlockConversionRateMin = 0;
+export const getVerifaiAdminOverviewResponseUnlockConversionRateMax = 100;
+
+
+
+export const GetVerifaiAdminOverviewResponse = zod.object({
+  "userCount": zod.number().int().min(getVerifaiAdminOverviewResponseUserCountMin),
+  "reportCount": zod.number().int().min(getVerifaiAdminOverviewResponseReportCountMin),
+  "freeOnlyReportCount": zod.number().int().min(getVerifaiAdminOverviewResponseFreeOnlyReportCountMin),
+  "unlockClickCount": zod.number().int().min(getVerifaiAdminOverviewResponseUnlockClickCountMin),
+  "unlockCompletedCount": zod.number().int().min(getVerifaiAdminOverviewResponseUnlockCompletedCountMin),
+  "unlockConversionRate": zod.number().min(getVerifaiAdminOverviewResponseUnlockConversionRateMin).max(getVerifaiAdminOverviewResponseUnlockConversionRateMax)
+})
+
+
+/**
+ * @summary List all generated VerifAI reports for administrators
+ */
+export const getVerifaiAdminReportsQueryPageDefault = 1;
+
+export const getVerifaiAdminReportsQueryPageSizeDefault = 25;
+export const getVerifaiAdminReportsQueryPageSizeMax = 100;
+
+
+
+export const GetVerifaiAdminReportsQueryParams = zod.object({
+  "page": zod.coerce.number().int().min(1).default(getVerifaiAdminReportsQueryPageDefault),
+  "pageSize": zod.coerce.number().int().min(1).max(getVerifaiAdminReportsQueryPageSizeMax).default(getVerifaiAdminReportsQueryPageSizeDefault)
+})
+
+export const getVerifaiAdminReportsResponseItemsItemScoreMin = 0;
+export const getVerifaiAdminReportsResponseItemsItemScoreMax = 100;
+
+
+export const getVerifaiAdminReportsResponsePageSizeMax = 100;
+
+export const getVerifaiAdminReportsResponseTotalMin = 0;
+
+export const getVerifaiAdminReportsResponseTotalPagesMin = 0;
+
+
+
+export const GetVerifaiAdminReportsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "ideaId": zod.string(),
+  "ideaName": zod.string(),
+  "ownerId": zod.string(),
+  "score": zod.number().int().min(getVerifaiAdminReportsResponseItemsItemScoreMin).max(getVerifaiAdminReportsResponseItemsItemScoreMax),
+  "verdict": zod.string(),
+  "generatedAt": zod.coerce.date(),
+  "isFullReport": zod.boolean(),
+  "unlockedAt": zod.coerce.date().nullable()
+})),
+  "page": zod.number().int().min(1),
+  "pageSize": zod.number().int().min(1).max(getVerifaiAdminReportsResponsePageSizeMax),
+  "total": zod.number().int().min(getVerifaiAdminReportsResponseTotalMin),
+  "totalPages": zod.number().int().min(getVerifaiAdminReportsResponseTotalPagesMin)
+})
+
+
+/**
+ * @summary Get a complete generated report for an administrator
+ */
+export const GetVerifaiAdminReportParams = zod.object({
+  "reportId": zod.coerce.string().uuid()
+})
+
+export const getVerifaiAdminReportResponseOneScoreMin = 0;
+export const getVerifaiAdminReportResponseOneScoreMax = 100;
+
+export const getVerifaiAdminReportResponseTwoSectionsItemScoreMin = 0;
+export const getVerifaiAdminReportResponseTwoSectionsItemScoreMax = 100;
+
+
+
+export const GetVerifaiAdminReportResponse = zod.object({
+  "id": zod.string(),
+  "ideaId": zod.string(),
+  "ideaName": zod.string(),
+  "ownerId": zod.string(),
+  "score": zod.number().int().min(getVerifaiAdminReportResponseOneScoreMin).max(getVerifaiAdminReportResponseOneScoreMax),
+  "verdict": zod.string(),
+  "generatedAt": zod.coerce.date(),
+  "isFullReport": zod.boolean(),
+  "unlockedAt": zod.coerce.date().nullable()
+}).and(zod.object({
+  "summary": zod.string(),
+  "sections": zod.array(zod.object({
+  "key": zod.enum(['market', 'technology', 'customers', 'go_to_market', 'risks', 'legal']),
+  "title": zod.string(),
+  "score": zod.number().int().min(getVerifaiAdminReportResponseTwoSectionsItemScoreMin).max(getVerifaiAdminReportResponseTwoSectionsItemScoreMax),
+  "summary": zod.string(),
+  "strengths": zod.array(zod.string()),
+  "improvements": zod.array(zod.string()),
+  "evidence": zod.array(zod.string())
+})),
+  "comparisons": zod.array(zod.string()),
+  "nextSteps": zod.array(zod.string())
+}))
+
+
+/**
  * @summary Get founder dashboard summary
  */
 export const getVerifaiDashboardResponseRecentIdeasItemProgressMin = 0;

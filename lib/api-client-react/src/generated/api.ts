@@ -25,12 +25,16 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AdminOverview,
+  AdminReportDetail,
+  AdminReportPage,
   CheckoutSession,
   CheckoutStatus,
   DashboardSummary,
   DemoUnlockResponse,
   FounderMessageInput,
   FounderMessageReply,
+  GetVerifaiAdminReportsParams,
   HealthStatus,
   Idea,
   IdeaAnswersInput,
@@ -158,6 +162,316 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getHealthCheckQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetVerifaiAdminOverviewUrl = () => {
+
+
+
+
+  return `/api/verifai/admin/overview`
+}
+
+/**
+ * @summary Get VerifAI administrator metrics
+ */
+export const getVerifaiAdminOverview = async ( options?: Parameters<typeof customFetch>[1]): Promise<AdminOverview> => {
+
+  return customFetch<AdminOverview>(getGetVerifaiAdminOverviewUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVerifaiAdminOverviewQueryKey = () => {
+    return [
+    `/api/verifai/admin/overview`
+    ] as const;
+    }
+
+
+export const getGetVerifaiAdminOverviewQueryOptions = <TData = Awaited<ReturnType<typeof getVerifaiAdminOverview>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminOverview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetVerifaiAdminOverviewQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVerifaiAdminOverview>>> = ({ signal }) => getVerifaiAdminOverview({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminOverview>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetVerifaiAdminOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof getVerifaiAdminOverview>>>
+export type GetVerifaiAdminOverviewQueryError = ErrorType<void>
+
+
+export function useGetVerifaiAdminOverview<TData = Awaited<ReturnType<typeof getVerifaiAdminOverview>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminOverview>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getVerifaiAdminOverview>>,
+          TError,
+          Awaited<ReturnType<typeof getVerifaiAdminOverview>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetVerifaiAdminOverview<TData = Awaited<ReturnType<typeof getVerifaiAdminOverview>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminOverview>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getVerifaiAdminOverview>>,
+          TError,
+          Awaited<ReturnType<typeof getVerifaiAdminOverview>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetVerifaiAdminOverview<TData = Awaited<ReturnType<typeof getVerifaiAdminOverview>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminOverview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get VerifAI administrator metrics
+ */
+
+export function useGetVerifaiAdminOverview<TData = Awaited<ReturnType<typeof getVerifaiAdminOverview>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminOverview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetVerifaiAdminOverviewQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetVerifaiAdminReportsUrl = (params?: GetVerifaiAdminReportsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/verifai/admin/reports?${stringifiedParams}` : `/api/verifai/admin/reports`
+}
+
+/**
+ * @summary List all generated VerifAI reports for administrators
+ */
+export const getVerifaiAdminReports = async (params?: GetVerifaiAdminReportsParams, options?: Parameters<typeof customFetch>[1]): Promise<AdminReportPage> => {
+
+  return customFetch<AdminReportPage>(getGetVerifaiAdminReportsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVerifaiAdminReportsQueryKey = (params?: GetVerifaiAdminReportsParams,) => {
+    return [
+    `/api/verifai/admin/reports`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetVerifaiAdminReportsQueryOptions = <TData = Awaited<ReturnType<typeof getVerifaiAdminReports>>, TError = ErrorType<void>>(params?: GetVerifaiAdminReportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetVerifaiAdminReportsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVerifaiAdminReports>>> = ({ signal }) => getVerifaiAdminReports(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminReports>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetVerifaiAdminReportsQueryResult = NonNullable<Awaited<ReturnType<typeof getVerifaiAdminReports>>>
+export type GetVerifaiAdminReportsQueryError = ErrorType<void>
+
+
+export function useGetVerifaiAdminReports<TData = Awaited<ReturnType<typeof getVerifaiAdminReports>>, TError = ErrorType<void>>(
+ params: undefined |  GetVerifaiAdminReportsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminReports>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getVerifaiAdminReports>>,
+          TError,
+          Awaited<ReturnType<typeof getVerifaiAdminReports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetVerifaiAdminReports<TData = Awaited<ReturnType<typeof getVerifaiAdminReports>>, TError = ErrorType<void>>(
+ params?: GetVerifaiAdminReportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminReports>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getVerifaiAdminReports>>,
+          TError,
+          Awaited<ReturnType<typeof getVerifaiAdminReports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetVerifaiAdminReports<TData = Awaited<ReturnType<typeof getVerifaiAdminReports>>, TError = ErrorType<void>>(
+ params?: GetVerifaiAdminReportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List all generated VerifAI reports for administrators
+ */
+
+export function useGetVerifaiAdminReports<TData = Awaited<ReturnType<typeof getVerifaiAdminReports>>, TError = ErrorType<void>>(
+ params?: GetVerifaiAdminReportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetVerifaiAdminReportsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetVerifaiAdminReportUrl = (reportId: string,) => {
+
+
+
+
+  return `/api/verifai/admin/reports/${reportId}`
+}
+
+/**
+ * @summary Get a complete generated report for an administrator
+ */
+export const getVerifaiAdminReport = async (reportId: string, options?: Parameters<typeof customFetch>[1]): Promise<AdminReportDetail> => {
+
+  return customFetch<AdminReportDetail>(getGetVerifaiAdminReportUrl(reportId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVerifaiAdminReportQueryKey = (reportId: string,) => {
+    return [
+    `/api/verifai/admin/reports/${reportId}`
+    ] as const;
+    }
+
+
+export const getGetVerifaiAdminReportQueryOptions = <TData = Awaited<ReturnType<typeof getVerifaiAdminReport>>, TError = ErrorType<void>>(reportId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetVerifaiAdminReportQueryKey(reportId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVerifaiAdminReport>>> = ({ signal }) => getVerifaiAdminReport(reportId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: reportId !== null && reportId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminReport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetVerifaiAdminReportQueryResult = NonNullable<Awaited<ReturnType<typeof getVerifaiAdminReport>>>
+export type GetVerifaiAdminReportQueryError = ErrorType<void>
+
+
+export function useGetVerifaiAdminReport<TData = Awaited<ReturnType<typeof getVerifaiAdminReport>>, TError = ErrorType<void>>(
+ reportId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminReport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getVerifaiAdminReport>>,
+          TError,
+          Awaited<ReturnType<typeof getVerifaiAdminReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetVerifaiAdminReport<TData = Awaited<ReturnType<typeof getVerifaiAdminReport>>, TError = ErrorType<void>>(
+ reportId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminReport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getVerifaiAdminReport>>,
+          TError,
+          Awaited<ReturnType<typeof getVerifaiAdminReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetVerifaiAdminReport<TData = Awaited<ReturnType<typeof getVerifaiAdminReport>>, TError = ErrorType<void>>(
+ reportId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get a complete generated report for an administrator
+ */
+
+export function useGetVerifaiAdminReport<TData = Awaited<ReturnType<typeof getVerifaiAdminReport>>, TError = ErrorType<void>>(
+ reportId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVerifaiAdminReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetVerifaiAdminReportQueryOptions(reportId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

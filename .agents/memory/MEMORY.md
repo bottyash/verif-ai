@@ -2,3 +2,4 @@
 - [AgenticOrg API authorization](agenticorg-api-authorization.md) — metadata-read failures are inconclusive for run-scoped keys; validate the direct UUID run route when approved.
 - [VerifAI refinement meaning](verifai-refinement-semantics.md) — refinement should be AI-generated framing and execution guidance, not a request for founders to rewrite their answers.
 - [VerifAI prototype access](verifai-prototype-access.md) — demo unlocks are no-charge and real payment checkout stays disabled until the gateway is intentionally enabled.
+- [VerifAI admin access](verifai-admin-access.md) — protect cross-user report data with a server-side allowlist of verified Clerk emails; fail closed until configured.

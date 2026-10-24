@@ -3,7 +3,8 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import {
   ArrowLeft, ArrowRight, ArrowUpRight, Check, ChevronRight,
   CircleHelp, Compass, FileText, Layers3, Lightbulb, LockKeyhole,
-  MessageCircle, Plus, RotateCw, UserRound, LogOut, Send,
+  MessageCircle, Plus, RotateCw, UserRound, LogOut, Send, Users,
+  MousePointerClick, ShieldAlert, ServerCrash, X,
 } from 'lucide-react';
 import {
   ClerkProvider,
@@ -20,10 +21,14 @@ import {
   getGetVerifaiIdeaQueryKey,
   getGetVerifaiMessagesQueryKey,
   getGetVerifaiReportQueryKey,
+  getGetVerifaiAdminReportQueryKey,
   getListVerifaiIdeasQueryKey,
   useCreateVerifaiIdea,
   useGenerateVerifaiQuestions,
   useGetVerifaiDashboard,
+  useGetVerifaiAdminOverview,
+  useGetVerifaiAdminReports,
+  useGetVerifaiAdminReport,
   useGetVerifaiIdea,
   useGetVerifaiMessages,
   useGetVerifaiReport,
@@ -180,6 +185,7 @@ function Shell({ children, title = 'Workspace' }: { children: ReactNode; title?:
         <nav>
           <Link href="/dashboard" className={`side-link ${location === '/dashboard' ? 'active' : ''}`} data-testid="link-dashboard"><Compass size={17}/><span>Overview</span></Link>
           <Link href="/new" className={`side-link ${location === '/new' ? 'active' : ''}`} data-testid="link-new-idea"><Plus size={17}/><span>New idea</span></Link>
+          <Link href="/admin" className={`side-link ${location === '/admin' ? 'active' : ''}`} data-testid="link-admin-sidebar"><Users size={17}/><span>Admin</span></Link>
         </nav>
       </div>
       <div className="sidebar-bottom">
@@ -189,7 +195,7 @@ function Shell({ children, title = 'Workspace' }: { children: ReactNode; title?:
       </div>
     </aside>
     <div className="workspace-main">
-      <header className="topbar"><div className="crumb"><span className="mobile-only">VERIFAI / </span>{title.toUpperCase()}</div><div className="topbar-right"><span>India · INR</span><Link href="/account" aria-label="Account" className="avatar" data-testid="link-avatar">F</Link></div></header>
+      <header className="topbar"><div className="crumb"><span className="mobile-only">VERIFAI / </span>{title.toUpperCase()}</div><div className="topbar-right"><Link href="/admin" className="admin-top-link" data-testid="link-admin-topbar">Admin</Link><span>India · INR</span><Link href="/account" aria-label="Account" className="avatar" data-testid="link-avatar">F</Link></div></header>
       {children}
     </div>
   </div>;
@@ -197,6 +203,194 @@ function Shell({ children, title = 'Workspace' }: { children: ReactNode; title?:
 
 function LoadingPage() {
   return <div className="page"><div className="skeleton" style={{height:13,width:150,marginBottom:22}}/><div className="skeleton" style={{height:46,width:'50%',marginBottom:18}}/><div className="skeleton" style={{height:90,marginBottom:32}}/><div className="loading-stack">{[1,2,3].map((n)=><div className="skeleton" key={n} style={{height:84}}/>)}</div></div>;
+}
+
+function AdminDashboard() {
+  const [page, setPage] = useState(1);
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+  const pageSize = 10;
+  const overview = useGetVerifaiAdminOverview();
+  const reports = useGetVerifaiAdminReports({ page, pageSize });
+  const detail = useGetVerifaiAdminReport(selectedReportId ?? '', {
+    query: {
+      enabled: Boolean(selectedReportId),
+      queryKey: getGetVerifaiAdminReportQueryKey(selectedReportId ?? ''),
+    },
+  });
+  const statusOf = (error: unknown) => typeof error === 'object' && error !== null && 'status' in error
+    ? Number((error as { status?: unknown }).status)
+    : undefined;
+  const errorStatus = statusOf(overview.error) ?? statusOf(reports.error);
+  const retry = () => {
+    void overview.refetch();
+    void reports.refetch();
+  };
+  const count = (value: number) => value.toLocaleString('en-IN');
+  const dateTime = (value: string) => {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime())
+      ? 'Time unavailable'
+      : parsed.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+
+  if (overview.isLoading || reports.isLoading) {
+    return <Shell title="Admin"><main className="page admin-page" data-testid="admin-loading">
+      <div className="admin-heading-skeleton"><div className="skeleton" style={{height:12,width:120}}/><div className="skeleton" style={{height:46,width:'52%',marginTop:17}}/><div className="skeleton" style={{height:16,width:'36%',marginTop:12}}/></div>
+      <div className="admin-metric-skeletons">{[1,2,3,4,5,6].map((item)=><div className="skeleton" key={item} style={{height:118}}/>)}</div>
+      <div className="skeleton" style={{height:360,marginTop:36}}/>
+    </main></Shell>;
+  }
+
+  if (errorStatus === 401 || errorStatus === 403) {
+    const unauthenticated = errorStatus === 401;
+    return <Shell title="Admin"><main className="page admin-page">
+      <section className="admin-access-state" role="alert" data-testid={unauthenticated ? 'status-admin-unauthorized' : 'status-admin-forbidden'}>
+        <div className="admin-state-icon"><ShieldAlert size={22}/></div>
+        <div className="eyebrow">Access response · {errorStatus}</div>
+        <h1>{unauthenticated ? 'Sign in to continue.' : 'This area is not available to this account.'}</h1>
+        <p>{unauthenticated ? 'The server did not accept the current session. Sign in and try the page again.' : 'The server has not granted access to this admin data. No reports or metrics are shown.'}</p>
+        {unauthenticated
+          ? <Link href="/sign-in" className="btn btn-primary" data-testid="link-admin-signin">Go to sign in <ArrowRight size={15}/></Link>
+          : <Link href="/dashboard" className="btn btn-outline" data-testid="link-admin-return">Back to workspace <ArrowLeft size={15}/></Link>}
+      </section>
+    </main></Shell>;
+  }
+
+  if (errorStatus === 503) {
+    return <Shell title="Admin"><main className="page admin-page">
+      <section className="admin-access-state admin-error-state" role="alert" data-testid="status-admin-unavailable">
+        <div className="admin-state-icon"><ServerCrash size={22}/></div>
+        <div className="eyebrow">Service unavailable · 503</div>
+        <h1>Admin access needs setup.</h1>
+        <p>The server could not confirm administrator access. If you own this workspace, configure a verified admin email for this environment; otherwise try again later. Access stays closed until verification succeeds.</p>
+        <button className="btn btn-primary" onClick={retry} data-testid="button-admin-retry"><RotateCw size={15}/> Try again</button>
+      </section>
+    </main></Shell>;
+  }
+
+  if (overview.isError || reports.isError || !overview.data || !reports.data) {
+    return <Shell title="Admin"><main className="page admin-page">
+      <section className="admin-access-state admin-error-state" role="alert" data-testid="status-admin-error">
+        <div className="admin-state-icon"><ServerCrash size={22}/></div>
+        <div className="eyebrow">Connection issue</div>
+        <h1>Admin data could not be loaded.</h1>
+        <p>The request failed without a confirmed access response. Please retry; no report contents are exposed here.</p>
+        <button className="btn btn-primary" onClick={retry} data-testid="button-admin-retry"><RotateCw size={15}/> Retry requests</button>
+      </section>
+    </main></Shell>;
+  }
+
+  const stats = [
+    { label: 'Registered users', value: count(overview.data.userCount), note: 'Accounts in VerifAI', icon: <Users size={17}/> },
+    { label: 'Generated reports', value: count(overview.data.reportCount), note: 'All report snapshots', icon: <FileText size={17}/> },
+    { label: 'Free-only reports', value: count(overview.data.freeOnlyReportCount), note: 'Not unlocked', icon: <LockKeyhole size={17}/> },
+    { label: 'Unlock clicks', value: count(overview.data.unlockClickCount), note: 'Unlock intent recorded', icon: <MousePointerClick size={17}/> },
+    { label: 'Unlocks completed', value: count(overview.data.unlockCompletedCount), note: 'Full access recorded', icon: <Check size={17}/> },
+    { label: 'Unlock conversion', value: `${overview.data.unlockConversionRate.toLocaleString('en-IN', { maximumFractionDigits: 1 })}%`, note: 'Completed / click rate', icon: <ArrowUpRight size={17}/> },
+  ];
+  const currentPage = reports.data.page;
+  const totalPages = reports.data.totalPages;
+
+  return <Shell title="Admin"><main className="page admin-page">
+    <div className="page-header admin-page-header">
+      <div><div className="eyebrow">VerifAI / operations</div><h1>Signal, at a glance.</h1><p className="muted">A server-sourced view of platform activity and generated report metadata.</p></div>
+      <div className="admin-live-mark"><span/> Live API data</div>
+    </div>
+    <section className="admin-metrics" aria-label="Platform metrics">
+      {stats.map((stat, index)=><article className={`admin-metric admin-metric-${index + 1}`} key={stat.label} data-testid={`admin-metric-${index + 1}`}>
+        <div className="admin-metric-top"><span>{stat.label}</span><i>{stat.icon}</i></div>
+        <strong data-testid={`admin-metric-value-${index + 1}`}>{stat.value}</strong>
+        <small>{stat.note}</small>
+      </article>)}
+    </section>
+    <section className="admin-reports-section">
+      <div className="admin-reports-heading">
+        <div><div className="eyebrow">Report index</div><h2>Generated reports</h2><p className="muted">Metadata only. Report contents are not available in this view.</p></div>
+        <div className="admin-total" data-testid="admin-report-total"><span>Records</span><strong>{count(reports.data.total)}</strong></div>
+      </div>
+      {reports.data.items.length === 0 ? <div className="admin-empty" data-testid="admin-reports-empty">
+        <div className="admin-state-icon"><FileText size={20}/></div><h3>No generated reports yet.</h3><p>When a report is generated, its metadata will appear here.</p>
+      </div> : <>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead><tr><th>Idea</th><th>Owner</th><th>Signal</th><th>Generated</th><th>Access</th><th><span className="sr-only">Details</span></th></tr></thead>
+            <tbody>{reports.data.items.map((report)=><tr key={report.id} data-testid={`admin-report-row-${report.id}`}>
+              <td><div className="report-idea-cell"><strong data-testid={`admin-report-idea-${report.id}`}>{report.ideaName}</strong><span>Idea {report.ideaId}</span></div></td>
+              <td><span className="report-owner" data-testid={`admin-report-owner-${report.id}`}>{report.ownerId}</span></td>
+              <td><div className="report-signal"><strong data-testid={`admin-report-score-${report.id}`}>{report.score}<small>/100</small></strong><span data-testid={`admin-report-verdict-${report.id}`}>{report.verdict}</span></div></td>
+              <td><time dateTime={report.generatedAt} data-testid={`admin-report-generated-${report.id}`}>{dateTime(report.generatedAt)}</time></td>
+              <td><span className={`report-access ${report.isFullReport ? 'unlocked' : 'free'}`} data-testid={`admin-report-access-${report.id}`}><i/>{report.isFullReport || report.unlockedAt ? 'Unlocked' : 'Free preview'}</span></td>
+              <td><button className="admin-inspect-button" onClick={()=>setSelectedReportId(report.id)} data-testid={`button-admin-open-report-${report.id}`}>Inspect <ArrowUpRight size={13}/></button></td>
+            </tr>)}</tbody>
+          </table>
+        </div>
+        <div className="admin-mobile-report-list">
+          {reports.data.items.map((report)=><article className="admin-report-card" key={report.id} data-testid={`admin-report-card-${report.id}`}>
+            <div className="admin-card-top"><strong data-testid={`admin-report-idea-mobile-${report.id}`}>{report.ideaName}</strong><span className={`report-access ${report.isFullReport ? 'unlocked' : 'free'}`} data-testid={`admin-report-access-mobile-${report.id}`}>{report.isFullReport || report.unlockedAt ? 'Unlocked' : 'Free preview'}</span></div>
+            <div className="admin-card-score"><strong>{report.score}<small>/100</small></strong><span data-testid={`admin-report-verdict-mobile-${report.id}`}>{report.verdict}</span></div>
+            <div className="admin-card-meta"><span>Owner <b data-testid={`admin-report-owner-mobile-${report.id}`}>{report.ownerId}</b></span><time dateTime={report.generatedAt} data-testid={`admin-report-generated-mobile-${report.id}`}>{dateTime(report.generatedAt)}</time></div>
+            <button className="admin-inspect-button admin-inspect-mobile" onClick={()=>setSelectedReportId(report.id)} data-testid={`button-admin-open-report-mobile-${report.id}`}>Inspect report <ArrowUpRight size={13}/></button>
+          </article>)}
+        </div>
+        <nav className="admin-pagination" aria-label="Report pages" data-testid="admin-pagination">
+          <span data-testid="admin-page-summary">Page {currentPage} of {totalPages} <i/> {count(reports.data.total)} reports</span>
+          <div>
+            <button className="btn btn-outline" onClick={()=>setPage((value)=>Math.max(1,value-1))} disabled={currentPage <= 1} data-testid="button-admin-previous"><ArrowLeft size={14}/> Previous</button>
+            <button className="btn btn-outline" onClick={()=>setPage((value)=>Math.min(totalPages,value+1))} disabled={currentPage >= totalPages} data-testid="button-admin-next">Next <ArrowRight size={14}/></button>
+          </div>
+        </nav>
+      </>}
+    </section>
+    {selectedReportId && <section className="admin-detail-panel" aria-live="polite" data-testid="admin-report-detail">
+      <div className="admin-detail-head">
+        <div><div className="eyebrow">Report detail / server response</div><h2>{detail.data?.id === selectedReportId ? detail.data.ideaName : 'Opening report detail'}</h2></div>
+        <button className="admin-close-detail" onClick={()=>setSelectedReportId(null)} aria-label="Close report detail" data-testid="button-admin-close-report"><X size={17}/></button>
+      </div>
+      {detail.isLoading && <div className="admin-detail-loading" role="status" data-testid="status-admin-report-loading"><div className="skeleton" style={{height:80}}/><div className="skeleton" style={{height:210}}/></div>}
+      {detail.isError && (() => {
+        const detailStatus = statusOf(detail.error);
+        const accessDenied = detailStatus === 401 || detailStatus === 403;
+        const unavailable = detailStatus === 503;
+        const stateId = detailStatus === 401 ? 'status-admin-report-unauthorized' : detailStatus === 403 ? 'status-admin-report-forbidden' : unavailable ? 'status-admin-report-unavailable' : 'status-admin-report-error';
+        return <div className="admin-detail-error" role="alert" data-testid={stateId}>
+          <strong>{accessDenied ? 'The server did not grant access to this report.' : unavailable ? 'Report detail is temporarily unavailable.' : 'Report detail could not be loaded.'}</strong>
+          <p>{accessDenied ? 'No report contents are shown.' : 'Retry the request when the service is ready.'}</p>
+          <button className="btn btn-outline" onClick={()=>void detail.refetch()} data-testid="button-admin-report-retry"><RotateCw size={14}/> Retry detail</button>
+        </div>;
+      })()}
+      {detail.data && detail.data.id === selectedReportId && !detail.isError && <>
+        <div className="admin-detail-overview">
+          <div className="admin-detail-score"><strong data-testid="admin-detail-score">{detail.data.score}<small>/100</small></strong><span data-testid="admin-detail-verdict">{detail.data.verdict}</span></div>
+          <dl>
+            <div><dt>Owner</dt><dd data-testid="admin-detail-owner">{detail.data.ownerId}</dd></div>
+            <div><dt>Idea ID</dt><dd data-testid="admin-detail-idea-id">{detail.data.ideaId}</dd></div>
+            <div><dt>Generated</dt><dd><time dateTime={detail.data.generatedAt} data-testid="admin-detail-generated">{dateTime(detail.data.generatedAt)}</time></dd></div>
+            <div><dt>Access</dt><dd data-testid="admin-detail-access">{detail.data.isFullReport || detail.data.unlockedAt ? 'Unlocked' : 'Free preview'}</dd></div>
+          </dl>
+        </div>
+        <section className="admin-detail-summary">
+          <div className="eyebrow">Executive summary</div>
+          <p data-testid="admin-detail-summary-text">{detail.data.summary}</p>
+        </section>
+        <section className="admin-detail-subsection">
+          <div className="admin-detail-subheading"><div><div className="eyebrow">Assessment</div><h3>Six lenses, one picture.</h3></div><span data-testid="admin-detail-section-count">{detail.data.sections.length} sections</span></div>
+          <div className="admin-detail-sections">
+            {detail.data.sections.map((section)=><article className="admin-detail-section" key={section.key} data-testid={`admin-detail-section-${section.key}`}>
+              <div className="admin-detail-section-top"><div><span>{section.key.replaceAll('_',' ')}</span><h4>{section.title}</h4></div><strong>{section.score}<small>/100</small></strong></div>
+              <p>{section.summary}</p>
+              {section.strengths.length > 0 && <div className="detail-list-block"><h5>Strengths</h5><ul>{section.strengths.map((item,index)=><li key={`${index}-${item}`}>{item}</li>)}</ul></div>}
+              {section.improvements.length > 0 && <div className="detail-list-block"><h5>Open questions</h5><ul>{section.improvements.map((item,index)=><li key={`${index}-${item}`}>{item}</li>)}</ul></div>}
+              {section.evidence.length > 0 && <div className="detail-list-block"><h5>Evidence</h5><ul>{section.evidence.map((item,index)=><li key={`${index}-${item}`}>{item}</li>)}</ul></div>}
+            </article>)}
+          </div>
+        </section>
+        <div className="admin-detail-lists">
+          <section className="admin-detail-list" data-testid="admin-detail-comparisons"><div className="eyebrow">Context</div><h3>Comparisons</h3>{detail.data.comparisons.length ? <ul>{detail.data.comparisons.map((item,index)=><li key={`${index}-${item}`}>{item}</li>)}</ul> : <p className="muted">No comparisons were included.</p>}</section>
+          <section className="admin-detail-list" data-testid="admin-detail-next-steps"><div className="eyebrow">Forward motion</div><h3>Next steps</h3>{detail.data.nextSteps.length ? <ol>{detail.data.nextSteps.map((item,index)=><li key={`${index}-${item}`}>{item}</li>)}</ol> : <p className="muted">No next steps were included.</p>}</section>
+        </div>
+      </>}
+    </section>}
+  </main></Shell>;
 }
 
 const analysisUpdates = [
@@ -488,6 +682,7 @@ function Router() {
   return <ErrorBoundary resetKey={location}><Switch>
     <Route path="/"><Show when="signed-in"><Redirect to="/dashboard"/></Show><Show when="signed-out"><Landing/></Show></Route>
     <Route path="/dashboard"><ProtectedPage><Dashboard/></ProtectedPage></Route>
+    <Route path="/admin"><ProtectedPage><AdminDashboard/></ProtectedPage></Route>
     <Route path="/new"><ProtectedPage><NewIdea/></ProtectedPage></Route>
     <Route path="/ideas/:ideaId/questions"><ProtectedPage><Questions/></ProtectedPage></Route>
     <Route path="/ideas/:ideaId/report"><ProtectedPage><Report/></ProtectedPage></Route>
@@ -551,7 +746,17 @@ function ClerkApp() {
 }
 
 function App() {
-  return <WouterRouter base={basePath}><ClerkApp/></WouterRouter>;
+  return <div
+    style={{ minHeight: '100vh' }}
+    onContextMenu={(event) => {
+      const target = event.target;
+      const editable = target instanceof Element
+        && target.closest('input, textarea, select, [contenteditable="true"], [data-allow-context-menu]');
+      if (!editable) event.preventDefault();
+    }}
+  >
+    <WouterRouter base={basePath}><ClerkApp/></WouterRouter>
+  </div>;
 }
 
 export default App;

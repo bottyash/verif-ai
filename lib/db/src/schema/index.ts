@@ -21,4 +21,5 @@ export * from "./conversations";
 export * from "./ideas";
 export * from "./messages";
 export * from "./payments";
+export * from "./report-unlock-events";
 export * from "./validation-reports";
