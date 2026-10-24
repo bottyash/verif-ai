@@ -6,11 +6,17 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AdminReport } from './adminReport';
+import type { PaidReportDetails } from './paidReportDetails';
+import type { ReportHeadlineSnapshot } from './reportHeadlineSnapshot';
+import type { ReportScoreHistoryEntry } from './reportScoreHistoryEntry';
 import type { ReportSection } from './reportSection';
 
-export type AdminReportDetail = AdminReport & {
+export type AdminReportDetail = AdminReport & ({
   summary: string;
   sections: ReportSection[];
   comparisons: string[];
   nextSteps: string[];
-};
+  headlineSnapshot: ReportHeadlineSnapshot | null;
+  paidDetails: PaidReportDetails | null;
+  scoreHistory: ReportScoreHistoryEntry[];
+});

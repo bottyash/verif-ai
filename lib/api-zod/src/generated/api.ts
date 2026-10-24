@@ -104,6 +104,32 @@ export const getVerifaiAdminReportResponseOneScoreMax = 100;
 export const getVerifaiAdminReportResponseTwoSectionsItemScoreMin = 0;
 export const getVerifaiAdminReportResponseTwoSectionsItemScoreMax = 100;
 
+export const getVerifaiAdminReportResponseTwoHeadlineSnapshotOneQuickRatingsTechnicalFeasibilityMax = 5;
+
+export const getVerifaiAdminReportResponseTwoHeadlineSnapshotOneQuickRatingsCompetitionPressureMax = 5;
+
+export const getVerifaiAdminReportResponseTwoHeadlineSnapshotOneQuickRatingsLegalComplexityMax = 5;
+
+export const getVerifaiAdminReportResponseTwoHeadlineSnapshotOneQuickRatingsGoToMarketDifficultyMax = 5;
+
+export const getVerifaiAdminReportResponseTwoHeadlineSnapshotOneTeasersCriticalRiskCountMin = 0;
+
+export const getVerifaiAdminReportResponseTwoHeadlineSnapshotOneTeasersCompetitorReviewCountMin = 0;
+
+export const getVerifaiAdminReportResponseTwoHeadlineSnapshotOneTeasersLegalReviewCountMin = 0;
+
+export const getVerifaiAdminReportResponseTwoPaidDetailsOneScoreBreakdownItemScoreMin = 0;
+export const getVerifaiAdminReportResponseTwoPaidDetailsOneScoreBreakdownItemScoreMax = 100;
+
+export const getVerifaiAdminReportResponseTwoPaidDetailsOneScoreBreakdownItemWeightPercentMin = 0;
+export const getVerifaiAdminReportResponseTwoPaidDetailsOneScoreBreakdownItemWeightPercentMax = 100;
+
+export const getVerifaiAdminReportResponseTwoPaidDetailsOneFundingReadinessScoreMin = 0;
+export const getVerifaiAdminReportResponseTwoPaidDetailsOneFundingReadinessScoreMax = 100;
+
+export const getVerifaiAdminReportResponseTwoScoreHistoryItemScoreMin = 0;
+export const getVerifaiAdminReportResponseTwoScoreHistoryItemScoreMax = 100;
+
 
 
 export const GetVerifaiAdminReportResponse = zod.object({
@@ -128,7 +154,78 @@ export const GetVerifaiAdminReportResponse = zod.object({
   "evidence": zod.array(zod.string())
 })),
   "comparisons": zod.array(zod.string()),
-  "nextSteps": zod.array(zod.string())
+  "nextSteps": zod.array(zod.string()),
+  "headlineSnapshot": zod.union([zod.object({
+  "market": zod.object({
+  "tam": zod.string().nullable(),
+  "sam": zod.string().nullable(),
+  "som": zod.string().nullable(),
+  "cagr": zod.string().nullable(),
+  "stage": zod.enum(['emerging', 'growing', 'saturated', 'unknown'])
+}),
+  "audience": zod.object({
+  "primarySegment": zod.string().nullable(),
+  "ageGroup": zod.string().nullable(),
+  "estimatedReachableUsers": zod.string().nullable(),
+  "topRegion": zod.string().nullable()
+}),
+  "financialSignals": zod.object({
+  "startupCostRange": zod.string().nullable(),
+  "breakEvenTimeline": zod.string().nullable(),
+  "roiRating": zod.union([zod.literal('low'),zod.literal('medium'),zod.literal('high'),zod.literal(null)]).nullable()
+}),
+  "quickRatings": zod.object({
+  "technicalFeasibility": zod.number().int().min(1).max(getVerifaiAdminReportResponseTwoHeadlineSnapshotOneQuickRatingsTechnicalFeasibilityMax),
+  "competitionPressure": zod.number().int().min(1).max(getVerifaiAdminReportResponseTwoHeadlineSnapshotOneQuickRatingsCompetitionPressureMax),
+  "legalComplexity": zod.number().int().min(1).max(getVerifaiAdminReportResponseTwoHeadlineSnapshotOneQuickRatingsLegalComplexityMax),
+  "goToMarketDifficulty": zod.number().int().min(1).max(getVerifaiAdminReportResponseTwoHeadlineSnapshotOneQuickRatingsGoToMarketDifficultyMax)
+}),
+  "teasers": zod.object({
+  "criticalRiskCount": zod.number().int().min(getVerifaiAdminReportResponseTwoHeadlineSnapshotOneTeasersCriticalRiskCountMin),
+  "competitorReviewCount": zod.number().int().min(getVerifaiAdminReportResponseTwoHeadlineSnapshotOneTeasersCompetitorReviewCountMin),
+  "legalReviewCount": zod.number().int().min(getVerifaiAdminReportResponseTwoHeadlineSnapshotOneTeasersLegalReviewCountMin),
+  "fundingReadinessAvailable": zod.boolean()
+})
+}),zod.null()]),
+  "paidDetails": zod.union([zod.object({
+  "scoreBreakdown": zod.array(zod.object({
+  "key": zod.enum(['market', 'technology', 'customers', 'go_to_market', 'risks', 'legal']),
+  "title": zod.string(),
+  "score": zod.number().int().min(getVerifaiAdminReportResponseTwoPaidDetailsOneScoreBreakdownItemScoreMin).max(getVerifaiAdminReportResponseTwoPaidDetailsOneScoreBreakdownItemScoreMax),
+  "weightPercent": zod.number().min(getVerifaiAdminReportResponseTwoPaidDetailsOneScoreBreakdownItemWeightPercentMin).max(getVerifaiAdminReportResponseTwoPaidDetailsOneScoreBreakdownItemWeightPercentMax)
+})),
+  "marketAnalysis": zod.array(zod.string()),
+  "customerAnalysis": zod.array(zod.string()),
+  "competitorAnalysis": zod.array(zod.string()),
+  "financialModel": zod.array(zod.string()),
+  "technicalPlan": zod.array(zod.string()),
+  "goToMarket": zod.array(zod.string()),
+  "riskRegister": zod.array(zod.object({
+  "risk": zod.string(),
+  "likelihood": zod.enum(['low', 'medium', 'high']),
+  "impact": zod.enum(['low', 'medium', 'high']),
+  "mitigation": zod.string()
+})),
+  "legalCompliance": zod.array(zod.string()),
+  "fundingReadiness": zod.object({
+  "score": zod.number().int().min(getVerifaiAdminReportResponseTwoPaidDetailsOneFundingReadinessScoreMin).max(getVerifaiAdminReportResponseTwoPaidDetailsOneFundingReadinessScoreMax),
+  "investorFit": zod.array(zod.string()),
+  "relevantPrograms": zod.array(zod.string()),
+  "pitchGaps": zod.array(zod.string()),
+  "valuationRange": zod.string().nullable(),
+  "likelyQuestions": zod.array(zod.string())
+}),
+  "actionPlan": zod.object({
+  "thisWeek": zod.array(zod.string()),
+  "thisMonth": zod.array(zod.string()),
+  "thisQuarter": zod.array(zod.string()),
+  "validationExperiments": zod.array(zod.string())
+})
+}),zod.null()]),
+  "scoreHistory": zod.array(zod.object({
+  "score": zod.number().int().min(getVerifaiAdminReportResponseTwoScoreHistoryItemScoreMin).max(getVerifaiAdminReportResponseTwoScoreHistoryItemScoreMax),
+  "generatedAt": zod.coerce.date()
+}))
 }))
 
 
@@ -350,6 +447,32 @@ export const runVerifaiAnalysisResponseScoreMax = 100;
 export const runVerifaiAnalysisResponseSectionsItemScoreMin = 0;
 export const runVerifaiAnalysisResponseSectionsItemScoreMax = 100;
 
+export const runVerifaiAnalysisResponseHeadlineSnapshotOneQuickRatingsTechnicalFeasibilityMax = 5;
+
+export const runVerifaiAnalysisResponseHeadlineSnapshotOneQuickRatingsCompetitionPressureMax = 5;
+
+export const runVerifaiAnalysisResponseHeadlineSnapshotOneQuickRatingsLegalComplexityMax = 5;
+
+export const runVerifaiAnalysisResponseHeadlineSnapshotOneQuickRatingsGoToMarketDifficultyMax = 5;
+
+export const runVerifaiAnalysisResponseHeadlineSnapshotOneTeasersCriticalRiskCountMin = 0;
+
+export const runVerifaiAnalysisResponseHeadlineSnapshotOneTeasersCompetitorReviewCountMin = 0;
+
+export const runVerifaiAnalysisResponseHeadlineSnapshotOneTeasersLegalReviewCountMin = 0;
+
+export const runVerifaiAnalysisResponsePaidDetailsOneScoreBreakdownItemScoreMin = 0;
+export const runVerifaiAnalysisResponsePaidDetailsOneScoreBreakdownItemScoreMax = 100;
+
+export const runVerifaiAnalysisResponsePaidDetailsOneScoreBreakdownItemWeightPercentMin = 0;
+export const runVerifaiAnalysisResponsePaidDetailsOneScoreBreakdownItemWeightPercentMax = 100;
+
+export const runVerifaiAnalysisResponsePaidDetailsOneFundingReadinessScoreMin = 0;
+export const runVerifaiAnalysisResponsePaidDetailsOneFundingReadinessScoreMax = 100;
+
+export const runVerifaiAnalysisResponseScoreHistoryItemScoreMin = 0;
+export const runVerifaiAnalysisResponseScoreHistoryItemScoreMax = 100;
+
 
 
 export const RunVerifaiAnalysisResponse = zod.object({
@@ -358,7 +481,7 @@ export const RunVerifaiAnalysisResponse = zod.object({
   "ideaName": zod.string(),
   "score": zod.number().int().min(runVerifaiAnalysisResponseScoreMin).max(runVerifaiAnalysisResponseScoreMax),
   "verdict": zod.string(),
-  "summary": zod.string().optional(),
+  "summary": zod.string(),
   "sections": zod.array(zod.object({
   "key": zod.enum(['market', 'technology', 'customers', 'go_to_market', 'risks', 'legal']),
   "title": zod.string(),
@@ -369,7 +492,78 @@ export const RunVerifaiAnalysisResponse = zod.object({
   "evidence": zod.array(zod.string())
 })),
   "comparisons": zod.array(zod.string()),
-  "nextSteps": zod.array(zod.string()).optional(),
+  "nextSteps": zod.array(zod.string()),
+  "headlineSnapshot": zod.union([zod.object({
+  "market": zod.object({
+  "tam": zod.string().nullable(),
+  "sam": zod.string().nullable(),
+  "som": zod.string().nullable(),
+  "cagr": zod.string().nullable(),
+  "stage": zod.enum(['emerging', 'growing', 'saturated', 'unknown'])
+}),
+  "audience": zod.object({
+  "primarySegment": zod.string().nullable(),
+  "ageGroup": zod.string().nullable(),
+  "estimatedReachableUsers": zod.string().nullable(),
+  "topRegion": zod.string().nullable()
+}),
+  "financialSignals": zod.object({
+  "startupCostRange": zod.string().nullable(),
+  "breakEvenTimeline": zod.string().nullable(),
+  "roiRating": zod.union([zod.literal('low'),zod.literal('medium'),zod.literal('high'),zod.literal(null)]).nullable()
+}),
+  "quickRatings": zod.object({
+  "technicalFeasibility": zod.number().int().min(1).max(runVerifaiAnalysisResponseHeadlineSnapshotOneQuickRatingsTechnicalFeasibilityMax),
+  "competitionPressure": zod.number().int().min(1).max(runVerifaiAnalysisResponseHeadlineSnapshotOneQuickRatingsCompetitionPressureMax),
+  "legalComplexity": zod.number().int().min(1).max(runVerifaiAnalysisResponseHeadlineSnapshotOneQuickRatingsLegalComplexityMax),
+  "goToMarketDifficulty": zod.number().int().min(1).max(runVerifaiAnalysisResponseHeadlineSnapshotOneQuickRatingsGoToMarketDifficultyMax)
+}),
+  "teasers": zod.object({
+  "criticalRiskCount": zod.number().int().min(runVerifaiAnalysisResponseHeadlineSnapshotOneTeasersCriticalRiskCountMin),
+  "competitorReviewCount": zod.number().int().min(runVerifaiAnalysisResponseHeadlineSnapshotOneTeasersCompetitorReviewCountMin),
+  "legalReviewCount": zod.number().int().min(runVerifaiAnalysisResponseHeadlineSnapshotOneTeasersLegalReviewCountMin),
+  "fundingReadinessAvailable": zod.boolean()
+})
+}),zod.null()]),
+  "paidDetails": zod.union([zod.object({
+  "scoreBreakdown": zod.array(zod.object({
+  "key": zod.enum(['market', 'technology', 'customers', 'go_to_market', 'risks', 'legal']),
+  "title": zod.string(),
+  "score": zod.number().int().min(runVerifaiAnalysisResponsePaidDetailsOneScoreBreakdownItemScoreMin).max(runVerifaiAnalysisResponsePaidDetailsOneScoreBreakdownItemScoreMax),
+  "weightPercent": zod.number().min(runVerifaiAnalysisResponsePaidDetailsOneScoreBreakdownItemWeightPercentMin).max(runVerifaiAnalysisResponsePaidDetailsOneScoreBreakdownItemWeightPercentMax)
+})),
+  "marketAnalysis": zod.array(zod.string()),
+  "customerAnalysis": zod.array(zod.string()),
+  "competitorAnalysis": zod.array(zod.string()),
+  "financialModel": zod.array(zod.string()),
+  "technicalPlan": zod.array(zod.string()),
+  "goToMarket": zod.array(zod.string()),
+  "riskRegister": zod.array(zod.object({
+  "risk": zod.string(),
+  "likelihood": zod.enum(['low', 'medium', 'high']),
+  "impact": zod.enum(['low', 'medium', 'high']),
+  "mitigation": zod.string()
+})),
+  "legalCompliance": zod.array(zod.string()),
+  "fundingReadiness": zod.object({
+  "score": zod.number().int().min(runVerifaiAnalysisResponsePaidDetailsOneFundingReadinessScoreMin).max(runVerifaiAnalysisResponsePaidDetailsOneFundingReadinessScoreMax),
+  "investorFit": zod.array(zod.string()),
+  "relevantPrograms": zod.array(zod.string()),
+  "pitchGaps": zod.array(zod.string()),
+  "valuationRange": zod.string().nullable(),
+  "likelyQuestions": zod.array(zod.string())
+}),
+  "actionPlan": zod.object({
+  "thisWeek": zod.array(zod.string()),
+  "thisMonth": zod.array(zod.string()),
+  "thisQuarter": zod.array(zod.string()),
+  "validationExperiments": zod.array(zod.string())
+})
+}),zod.null()]),
+  "scoreHistory": zod.array(zod.object({
+  "score": zod.number().int().min(runVerifaiAnalysisResponseScoreHistoryItemScoreMin).max(runVerifaiAnalysisResponseScoreHistoryItemScoreMax),
+  "generatedAt": zod.coerce.date()
+})),
   "generatedAt": zod.coerce.date(),
   "isFullReport": zod.boolean()
 })
@@ -388,6 +582,32 @@ export const getVerifaiReportResponseScoreMax = 100;
 export const getVerifaiReportResponseSectionsItemScoreMin = 0;
 export const getVerifaiReportResponseSectionsItemScoreMax = 100;
 
+export const getVerifaiReportResponseHeadlineSnapshotOneQuickRatingsTechnicalFeasibilityMax = 5;
+
+export const getVerifaiReportResponseHeadlineSnapshotOneQuickRatingsCompetitionPressureMax = 5;
+
+export const getVerifaiReportResponseHeadlineSnapshotOneQuickRatingsLegalComplexityMax = 5;
+
+export const getVerifaiReportResponseHeadlineSnapshotOneQuickRatingsGoToMarketDifficultyMax = 5;
+
+export const getVerifaiReportResponseHeadlineSnapshotOneTeasersCriticalRiskCountMin = 0;
+
+export const getVerifaiReportResponseHeadlineSnapshotOneTeasersCompetitorReviewCountMin = 0;
+
+export const getVerifaiReportResponseHeadlineSnapshotOneTeasersLegalReviewCountMin = 0;
+
+export const getVerifaiReportResponsePaidDetailsOneScoreBreakdownItemScoreMin = 0;
+export const getVerifaiReportResponsePaidDetailsOneScoreBreakdownItemScoreMax = 100;
+
+export const getVerifaiReportResponsePaidDetailsOneScoreBreakdownItemWeightPercentMin = 0;
+export const getVerifaiReportResponsePaidDetailsOneScoreBreakdownItemWeightPercentMax = 100;
+
+export const getVerifaiReportResponsePaidDetailsOneFundingReadinessScoreMin = 0;
+export const getVerifaiReportResponsePaidDetailsOneFundingReadinessScoreMax = 100;
+
+export const getVerifaiReportResponseScoreHistoryItemScoreMin = 0;
+export const getVerifaiReportResponseScoreHistoryItemScoreMax = 100;
+
 
 
 export const GetVerifaiReportResponse = zod.object({
@@ -396,7 +616,7 @@ export const GetVerifaiReportResponse = zod.object({
   "ideaName": zod.string(),
   "score": zod.number().int().min(getVerifaiReportResponseScoreMin).max(getVerifaiReportResponseScoreMax),
   "verdict": zod.string(),
-  "summary": zod.string().optional(),
+  "summary": zod.string(),
   "sections": zod.array(zod.object({
   "key": zod.enum(['market', 'technology', 'customers', 'go_to_market', 'risks', 'legal']),
   "title": zod.string(),
@@ -407,7 +627,78 @@ export const GetVerifaiReportResponse = zod.object({
   "evidence": zod.array(zod.string())
 })),
   "comparisons": zod.array(zod.string()),
-  "nextSteps": zod.array(zod.string()).optional(),
+  "nextSteps": zod.array(zod.string()),
+  "headlineSnapshot": zod.union([zod.object({
+  "market": zod.object({
+  "tam": zod.string().nullable(),
+  "sam": zod.string().nullable(),
+  "som": zod.string().nullable(),
+  "cagr": zod.string().nullable(),
+  "stage": zod.enum(['emerging', 'growing', 'saturated', 'unknown'])
+}),
+  "audience": zod.object({
+  "primarySegment": zod.string().nullable(),
+  "ageGroup": zod.string().nullable(),
+  "estimatedReachableUsers": zod.string().nullable(),
+  "topRegion": zod.string().nullable()
+}),
+  "financialSignals": zod.object({
+  "startupCostRange": zod.string().nullable(),
+  "breakEvenTimeline": zod.string().nullable(),
+  "roiRating": zod.union([zod.literal('low'),zod.literal('medium'),zod.literal('high'),zod.literal(null)]).nullable()
+}),
+  "quickRatings": zod.object({
+  "technicalFeasibility": zod.number().int().min(1).max(getVerifaiReportResponseHeadlineSnapshotOneQuickRatingsTechnicalFeasibilityMax),
+  "competitionPressure": zod.number().int().min(1).max(getVerifaiReportResponseHeadlineSnapshotOneQuickRatingsCompetitionPressureMax),
+  "legalComplexity": zod.number().int().min(1).max(getVerifaiReportResponseHeadlineSnapshotOneQuickRatingsLegalComplexityMax),
+  "goToMarketDifficulty": zod.number().int().min(1).max(getVerifaiReportResponseHeadlineSnapshotOneQuickRatingsGoToMarketDifficultyMax)
+}),
+  "teasers": zod.object({
+  "criticalRiskCount": zod.number().int().min(getVerifaiReportResponseHeadlineSnapshotOneTeasersCriticalRiskCountMin),
+  "competitorReviewCount": zod.number().int().min(getVerifaiReportResponseHeadlineSnapshotOneTeasersCompetitorReviewCountMin),
+  "legalReviewCount": zod.number().int().min(getVerifaiReportResponseHeadlineSnapshotOneTeasersLegalReviewCountMin),
+  "fundingReadinessAvailable": zod.boolean()
+})
+}),zod.null()]),
+  "paidDetails": zod.union([zod.object({
+  "scoreBreakdown": zod.array(zod.object({
+  "key": zod.enum(['market', 'technology', 'customers', 'go_to_market', 'risks', 'legal']),
+  "title": zod.string(),
+  "score": zod.number().int().min(getVerifaiReportResponsePaidDetailsOneScoreBreakdownItemScoreMin).max(getVerifaiReportResponsePaidDetailsOneScoreBreakdownItemScoreMax),
+  "weightPercent": zod.number().min(getVerifaiReportResponsePaidDetailsOneScoreBreakdownItemWeightPercentMin).max(getVerifaiReportResponsePaidDetailsOneScoreBreakdownItemWeightPercentMax)
+})),
+  "marketAnalysis": zod.array(zod.string()),
+  "customerAnalysis": zod.array(zod.string()),
+  "competitorAnalysis": zod.array(zod.string()),
+  "financialModel": zod.array(zod.string()),
+  "technicalPlan": zod.array(zod.string()),
+  "goToMarket": zod.array(zod.string()),
+  "riskRegister": zod.array(zod.object({
+  "risk": zod.string(),
+  "likelihood": zod.enum(['low', 'medium', 'high']),
+  "impact": zod.enum(['low', 'medium', 'high']),
+  "mitigation": zod.string()
+})),
+  "legalCompliance": zod.array(zod.string()),
+  "fundingReadiness": zod.object({
+  "score": zod.number().int().min(getVerifaiReportResponsePaidDetailsOneFundingReadinessScoreMin).max(getVerifaiReportResponsePaidDetailsOneFundingReadinessScoreMax),
+  "investorFit": zod.array(zod.string()),
+  "relevantPrograms": zod.array(zod.string()),
+  "pitchGaps": zod.array(zod.string()),
+  "valuationRange": zod.string().nullable(),
+  "likelyQuestions": zod.array(zod.string())
+}),
+  "actionPlan": zod.object({
+  "thisWeek": zod.array(zod.string()),
+  "thisMonth": zod.array(zod.string()),
+  "thisQuarter": zod.array(zod.string()),
+  "validationExperiments": zod.array(zod.string())
+})
+}),zod.null()]),
+  "scoreHistory": zod.array(zod.object({
+  "score": zod.number().int().min(getVerifaiReportResponseScoreHistoryItemScoreMin).max(getVerifaiReportResponseScoreHistoryItemScoreMax),
+  "generatedAt": zod.coerce.date()
+})),
   "generatedAt": zod.coerce.date(),
   "isFullReport": zod.boolean()
 })

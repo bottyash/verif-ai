@@ -175,7 +175,21 @@ async function findIdea(id: string, ownerId: string): Promise<IdeaRecord | undef
   return idea;
 }
 
-function publicReport(report: typeof validationReportsTable.$inferSelect) {
+async function reportScoreHistory(ideaId: string, ownerId: string) {
+  return db
+    .select({
+      score: validationReportsTable.score,
+      generatedAt: validationReportsTable.generatedAt,
+    })
+    .from(validationReportsTable)
+    .where(and(eq(validationReportsTable.ideaId, ideaId), eq(validationReportsTable.ownerId, ownerId)))
+    .orderBy(asc(validationReportsTable.generatedAt));
+}
+
+function publicReport(
+  report: typeof validationReportsTable.$inferSelect,
+  scoreHistory: Awaited<ReturnType<typeof reportScoreHistory>> = [],
+) {
   const full = report.isFullReport;
   return {
     id: report.id,
@@ -183,16 +197,18 @@ function publicReport(report: typeof validationReportsTable.$inferSelect) {
     ideaName: "",
     score: report.score,
     verdict: report.verdict,
-    summary: report.summary,
-    sections: report.sections.map((section) => ({
-      ...section,
-      summary: full ? section.summary : "",
-      strengths: full ? section.strengths : [],
-      improvements: full ? section.improvements : [],
-      evidence: full ? section.evidence : [],
-    })),
+    summary: full ? report.summary : "",
+    sections: full ? report.sections : [],
     comparisons: full ? report.comparisons : [],
     nextSteps: full ? report.nextSteps : [],
+    headlineSnapshot: report.headlineSnapshot,
+    paidDetails: full ? report.paidDetails : null,
+    scoreHistory: full
+      ? scoreHistory.map((entry) => ({
+          score: entry.score,
+          generatedAt: entry.generatedAt,
+        }))
+      : [],
     generatedAt: report.generatedAt,
     isFullReport: full,
   };
@@ -471,6 +487,8 @@ router.post("/verifai/ideas/:ideaId/analysis", async (req, res): Promise<void> =
       sections: analysis.sections,
       comparisons: analysis.comparisons,
       nextSteps: analysis.nextSteps,
+      headlineSnapshot: analysis.headlineSnapshot,
+      paidDetails: analysis.paidDetails,
       isFullReport: Boolean(idea.premiumUnlockedAt),
     })
     .returning();
@@ -481,7 +499,10 @@ router.post("/verifai/ideas/:ideaId/analysis", async (req, res): Promise<void> =
 
   res.json(
     RunVerifaiAnalysisResponse.parse({
-      ...publicReport(report),
+      ...publicReport(
+        report,
+        report.isFullReport ? await reportScoreHistory(idea.id, ownerId) : [],
+      ),
       ideaName: idea.name,
     }),
   );
@@ -514,7 +535,15 @@ router.get("/verifai/ideas/:ideaId/report", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Run the idea assessment to create a report." });
     return;
   }
-  res.json(GetVerifaiReportResponse.parse({ ...publicReport(report), ideaName: idea.name }));
+  res.json(
+    GetVerifaiReportResponse.parse({
+      ...publicReport(
+        report,
+        report.isFullReport ? await reportScoreHistory(idea.id, ownerId) : [],
+      ),
+      ideaName: idea.name,
+    }),
+  );
 });
 
 router.get("/verifai/ideas/:ideaId/checkout-status", async (req, res): Promise<void> => {

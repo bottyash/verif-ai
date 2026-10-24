@@ -141,6 +141,197 @@ export interface ReportSection {
   evidence: string[];
 }
 
+export type ReportHeadlineSnapshotMarketStage = typeof ReportHeadlineSnapshotMarketStage[keyof typeof ReportHeadlineSnapshotMarketStage];
+
+
+export const ReportHeadlineSnapshotMarketStage = {
+  emerging: 'emerging',
+  growing: 'growing',
+  saturated: 'saturated',
+  unknown: 'unknown',
+} as const;
+
+export type ReportHeadlineSnapshotMarket = {
+  /** @nullable */
+  tam: string | null;
+  /** @nullable */
+  sam: string | null;
+  /** @nullable */
+  som: string | null;
+  /** @nullable */
+  cagr: string | null;
+  stage: ReportHeadlineSnapshotMarketStage;
+};
+
+export type ReportHeadlineSnapshotAudience = {
+  /** @nullable */
+  primarySegment: string | null;
+  /** @nullable */
+  ageGroup: string | null;
+  /** @nullable */
+  estimatedReachableUsers: string | null;
+  /** @nullable */
+  topRegion: string | null;
+};
+
+/**
+ * @nullable
+ */
+export type ReportHeadlineSnapshotFinancialSignalsRoiRating = typeof ReportHeadlineSnapshotFinancialSignalsRoiRating[keyof typeof ReportHeadlineSnapshotFinancialSignalsRoiRating] | null;
+
+
+export const ReportHeadlineSnapshotFinancialSignalsRoiRating = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export type ReportHeadlineSnapshotFinancialSignals = {
+  /** @nullable */
+  startupCostRange: string | null;
+  /** @nullable */
+  breakEvenTimeline: string | null;
+  /** @nullable */
+  roiRating: ReportHeadlineSnapshotFinancialSignalsRoiRating;
+};
+
+export type ReportHeadlineSnapshotQuickRatings = {
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  technicalFeasibility: number;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  competitionPressure: number;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  legalComplexity: number;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  goToMarketDifficulty: number;
+};
+
+export type ReportHeadlineSnapshotTeasers = {
+  /** @minimum 0 */
+  criticalRiskCount: number;
+  /** @minimum 0 */
+  competitorReviewCount: number;
+  /** @minimum 0 */
+  legalReviewCount: number;
+  fundingReadinessAvailable: boolean;
+};
+
+export interface ReportHeadlineSnapshot {
+  market: ReportHeadlineSnapshotMarket;
+  audience: ReportHeadlineSnapshotAudience;
+  financialSignals: ReportHeadlineSnapshotFinancialSignals;
+  quickRatings: ReportHeadlineSnapshotQuickRatings;
+  teasers: ReportHeadlineSnapshotTeasers;
+}
+
+export type ReportRiskItemLikelihood = typeof ReportRiskItemLikelihood[keyof typeof ReportRiskItemLikelihood];
+
+
+export const ReportRiskItemLikelihood = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export type ReportRiskItemImpact = typeof ReportRiskItemImpact[keyof typeof ReportRiskItemImpact];
+
+
+export const ReportRiskItemImpact = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface ReportRiskItem {
+  risk: string;
+  likelihood: ReportRiskItemLikelihood;
+  impact: ReportRiskItemImpact;
+  mitigation: string;
+}
+
+export type ReportScoreBreakdownKey = typeof ReportScoreBreakdownKey[keyof typeof ReportScoreBreakdownKey];
+
+
+export const ReportScoreBreakdownKey = {
+  market: 'market',
+  technology: 'technology',
+  customers: 'customers',
+  go_to_market: 'go_to_market',
+  risks: 'risks',
+  legal: 'legal',
+} as const;
+
+export interface ReportScoreBreakdown {
+  key: ReportScoreBreakdownKey;
+  title: string;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  score: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  weightPercent: number;
+}
+
+export interface ReportFundingReadiness {
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  score: number;
+  investorFit: string[];
+  relevantPrograms: string[];
+  pitchGaps: string[];
+  /** @nullable */
+  valuationRange: string | null;
+  likelyQuestions: string[];
+}
+
+export interface ReportActionPlan {
+  thisWeek: string[];
+  thisMonth: string[];
+  thisQuarter: string[];
+  validationExperiments: string[];
+}
+
+export interface PaidReportDetails {
+  scoreBreakdown: ReportScoreBreakdown[];
+  marketAnalysis: string[];
+  customerAnalysis: string[];
+  competitorAnalysis: string[];
+  financialModel: string[];
+  technicalPlan: string[];
+  goToMarket: string[];
+  riskRegister: ReportRiskItem[];
+  legalCompliance: string[];
+  fundingReadiness: ReportFundingReadiness;
+  actionPlan: ReportActionPlan;
+}
+
+export interface ReportScoreHistoryEntry {
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  score: number;
+  generatedAt: string;
+}
+
 export interface ValidationReport {
   id: string;
   ideaId: string;
@@ -151,10 +342,13 @@ export interface ValidationReport {
      */
   score: number;
   verdict: string;
-  summary?: string;
+  summary: string;
   sections: ReportSection[];
   comparisons: string[];
-  nextSteps?: string[];
+  nextSteps: string[];
+  headlineSnapshot: ReportHeadlineSnapshot | null;
+  paidDetails: PaidReportDetails | null;
+  scoreHistory: ReportScoreHistoryEntry[];
   generatedAt: string;
   isFullReport: boolean;
 }
@@ -267,12 +461,15 @@ export interface AdminReport {
   unlockedAt: string | null;
 }
 
-export type AdminReportDetail = AdminReport & {
+export type AdminReportDetail = AdminReport & ({
   summary: string;
   sections: ReportSection[];
   comparisons: string[];
   nextSteps: string[];
-};
+  headlineSnapshot: ReportHeadlineSnapshot | null;
+  paidDetails: PaidReportDetails | null;
+  scoreHistory: ReportScoreHistoryEntry[];
+});
 
 export interface AdminReportPage {
   items: AdminReport[];

@@ -205,6 +205,72 @@ function LoadingPage() {
   return <div className="page"><div className="skeleton" style={{height:13,width:150,marginBottom:22}}/><div className="skeleton" style={{height:46,width:'50%',marginBottom:18}}/><div className="skeleton" style={{height:90,marginBottom:32}}/><div className="loading-stack">{[1,2,3].map((n)=><div className="skeleton" key={n} style={{height:84}}/>)}</div></div>;
 }
 
+function SnapshotReadout({ snapshot, prefix = 'snapshot' }: { snapshot: any; prefix?: string }) {
+  const value = (item: unknown) => item == null || item === '' ? 'Needs validation' : String(item);
+  const groups = [
+    { title: 'Market shape', items: [['Total addressable market', snapshot.market?.tam], ['Serviceable market', snapshot.market?.sam], ['Obtainable market', snapshot.market?.som], ['Growth rate', snapshot.market?.cagr], ['Market stage', snapshot.market?.stage]] },
+    { title: 'Who it may serve', items: [['Primary segment', snapshot.audience?.primarySegment], ['Age group', snapshot.audience?.ageGroup], ['Reachable users', snapshot.audience?.estimatedReachableUsers], ['Top region', snapshot.audience?.topRegion]] },
+    { title: 'Financial signals', items: [['Startup cost range', snapshot.financialSignals?.startupCostRange], ['Break-even timeline', snapshot.financialSignals?.breakEvenTimeline], ['ROI rating', snapshot.financialSignals?.roiRating]] },
+  ];
+  const ratings = [
+    ['Technical feasibility', snapshot.quickRatings?.technicalFeasibility],
+    ['Competition pressure', snapshot.quickRatings?.competitionPressure],
+    ['Legal complexity', snapshot.quickRatings?.legalComplexity],
+    ['Go-to-market difficulty', snapshot.quickRatings?.goToMarketDifficulty],
+  ] as const;
+  return <section className="snapshot-readout" data-testid={`${prefix}-headline-snapshot`}>
+    <div className="snapshot-section-heading"><div><div className="question-count">Headline snapshot</div><h2>What the current inputs suggest</h2></div><span className="muted">Directional, not market research</span></div>
+    <div className="snapshot-readout-groups">{groups.map((group)=><article className="snapshot-readout-group" key={group.title}>
+      <h3>{group.title}</h3><dl>{group.items.map(([label, item])=><div key={label}><dt>{label}</dt><dd>{value(item)}</dd></div>)}</dl>
+    </article>)}</div>
+    <article className="snapshot-readout-group quick-ratings"><h3>Quick ratings <span>1–5 · higher means more of the named quality or challenge</span></h3>
+      <div className="rating-list">{ratings.map(([label, rating])=><div className="rating-row" key={label}><span>{label}</span><strong>{rating == null ? 'Needs validation' : `${rating} / 5`}</strong></div>)}</div>
+    </article>
+    <div className="teaser-strip" aria-label="Locked report details">
+      <div><strong>{snapshot.teasers?.criticalRiskCount ?? '—'}</strong><span>critical risks to review</span></div>
+      <div><strong>{snapshot.teasers?.competitorReviewCount ?? '—'}</strong><span>competitor notes</span></div>
+      <div><strong>{snapshot.teasers?.legalReviewCount ?? '—'}</strong><span>legal checks</span></div>
+      <div><strong>{snapshot.teasers?.fundingReadinessAvailable ? 'Available' : 'Not included'}</strong><span>funding readiness</span></div>
+    </div>
+  </section>;
+}
+
+function DetailList({ title, items }: { title: string; items?: string[] | null }) {
+  return <section className="paid-detail-card"><h3>{title}</h3>{items?.length ? <ul>{items.map((item, index)=><li key={`${index}-${item}`}>{item}</li>)}</ul> : <p className="muted">No detail was included for this area.</p>}</section>;
+}
+
+function PaidDetailsReadout({ details, history }: { details: any; history?: any[] }) {
+  const categories = [
+    ['Market analysis', details.marketAnalysis],
+    ['Customer analysis', details.customerAnalysis],
+    ['Competitor analysis', details.competitorAnalysis],
+    ['Financial model', details.financialModel],
+    ['Technical plan', details.technicalPlan],
+    ['Go-to-market', details.goToMarket],
+    ['Legal and compliance', details.legalCompliance],
+  ] as const;
+  const funding = details.fundingReadiness;
+  const plan = details.actionPlan;
+  return <div className="paid-details-readout" data-testid="paid-report-details">
+    <section className="paid-breakdown">
+      <div className="snapshot-section-heading"><div><div className="question-count">How the score is weighted</div><h2>Score breakdown</h2></div></div>
+      {details.scoreBreakdown?.length ? <div className="breakdown-list">{details.scoreBreakdown.map((item: any)=><div className="breakdown-row" key={item.key}><div><strong>{item.title}</strong><span>{item.weightPercent}% weight</span></div><b>{item.score}<small>/100</small></b></div>)}</div> : <p className="muted">No score breakdown was included.</p>}
+    </section>
+    {history && <section className="score-history"><div className="snapshot-section-heading"><div><div className="question-count">Change over time</div><h2>Score history</h2></div></div>
+      {history.length ? <div className="history-list">{history.map((entry,index)=><div className="history-row" key={`${entry.generatedAt}-${index}`}><strong>{entry.score}<small>/100</small></strong><time dateTime={entry.generatedAt}>{new Date(entry.generatedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</time></div>)}</div> : <p className="muted">This is the first recorded score for this report.</p>}
+    </section>}
+    <div className="paid-category-grid">{categories.map(([title, items])=><DetailList key={title} title={title} items={items}/>)}</div>
+    <section className="paid-detail-card risk-register"><h3>Risk register</h3>{details.riskRegister?.length ? <div className="risk-list">{details.riskRegister.map((item:any,index:number)=><article key={`${item.risk}-${index}`}><strong>{item.risk}</strong><div><span>Likelihood: {item.likelihood}</span><span>Impact: {item.impact}</span></div><p>{item.mitigation}</p></article>)}</div> : <p className="muted">No specific risks were listed.</p>}</section>
+    {funding && <section className="funding-readiness"><div className="funding-score"><span>Funding readiness</span><strong>{funding.score}<small>/100</small></strong></div><div className="funding-content">
+      <DetailList title="Potential investor fit" items={funding.investorFit}/><DetailList title="Relevant programs" items={funding.relevantPrograms}/><DetailList title="Pitch gaps" items={funding.pitchGaps}/><DetailList title="Likely investor questions" items={funding.likelyQuestions}/>
+      <div className="valuation-note"><span>Valuation range</span><strong>{funding.valuationRange ?? 'Needs validation'}</strong></div>
+    </div></section>}
+    {plan && <section className="action-plan"><div className="snapshot-section-heading"><div><div className="question-count">A practical sequence</div><h2>Action plan</h2></div></div><div className="action-plan-grid">
+      <DetailList title="This week" items={plan.thisWeek}/><DetailList title="This month" items={plan.thisMonth}/><DetailList title="This quarter" items={plan.thisQuarter}/><DetailList title="Validation experiments" items={plan.validationExperiments}/>
+    </div></section>}
+  </div>;
+}
+
 function AdminDashboard() {
   const [page, setPage] = useState(1);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
@@ -368,6 +434,12 @@ function AdminDashboard() {
             <div><dt>Access</dt><dd data-testid="admin-detail-access">{detail.data.isFullReport || detail.data.unlockedAt ? 'Unlocked' : 'Free preview'}</dd></div>
           </dl>
         </div>
+        {detail.data.headlineSnapshot
+          ? <SnapshotReadout snapshot={detail.data.headlineSnapshot} prefix="admin"/>
+          : <div className="legacy-report-note" data-testid="admin-legacy-snapshot">Legacy report: no headline snapshot was stored for this record.</div>}
+        {detail.data.paidDetails
+          ? <PaidDetailsReadout details={detail.data.paidDetails} history={detail.data.scoreHistory ?? []}/>
+          : <div className="legacy-report-note" data-testid="admin-legacy-paid-details">{detail.data.isFullReport ? 'Legacy report: detailed analysis is not available for this record.' : 'No paid details are stored for this report.'}</div>}
         <section className="admin-detail-summary">
           <div className="eyebrow">Executive summary</div>
           <p data-testid="admin-detail-summary-text">{detail.data.summary}</p>
@@ -569,8 +641,14 @@ function Report({finalView=false}:{finalView?:boolean}) {
     {finalView&&<div className="notice" role="status" data-testid="status-demo-unlocked"><strong>Prototype mode.</strong> Full access is enabled for testing. No payment was taken.</div>}
     <section className="report-score" style={{['--score' as any]:`${score*3.6}deg`}} data-testid="report-score">
       <div className="score-ring"><div className="score-inner"><div className="score-number">{score}</div><div className="score-denom">OUT OF 100</div></div></div>
-      <div><div className="verdict">{data.verdict}</div><h2>{data.summary || 'A starting point for a better-informed next step.'}</h2><p>A directional signal based on what you shared — not a prediction of success.</p></div>
+      <div><div className="verdict">{data.verdict}</div>{data.isFullReport&&<h2>{data.summary || 'A starting point for a better-informed next step.'}</h2>}<p>A directional signal based on what you shared — not a prediction of success.</p></div>
     </section>
+    {!data.headlineSnapshot&&<div className="legacy-report-note" data-testid="legacy-snapshot-notice">
+      <div><strong>This report predates the headline snapshot.</strong><span>There are no saved market or audience metrics to show. Regenerate to build a fresh snapshot from your current inputs.</span></div>
+      <button className="btn btn-outline" onClick={generate} disabled={run.isPending} data-testid="button-regenerate-snapshot"><RotateCw size={14}/>{run.isPending?'Refreshing snapshot…':'Regenerate snapshot'}</button>
+    </div>}
+    {!data.headlineSnapshot&&run.isError&&<div className="error-box" role="alert" data-testid="error-regenerate-snapshot"><span>The snapshot could not be regenerated. Your existing report is unchanged.</span><button className="btn btn-outline" onClick={generate}>Try again</button></div>}
+    {!data.isFullReport&&data.headlineSnapshot&&<SnapshotReadout snapshot={data.headlineSnapshot}/>}
     {!data.isFullReport&&<section className="unlock-offer" data-testid="section-unlock-offer">
       <div className="unlock-offer-heading"><div className="eyebrow">THE FULL PICTURE</div><h2>Ready for the useful details?</h2><p>One unlock opens the complete report and AI founder coach for this idea.</p></div>
       <div className="unlock-benefit-grid">
@@ -585,6 +663,9 @@ function Report({finalView=false}:{finalView?:boolean}) {
       {demoError&&<div className="error-box" role="alert" data-testid="error-demo-unlock">{demoError}</div>}
     </section>}
     {data.isFullReport&&<>
+      {data.paidDetails
+        ? <PaidDetailsReadout details={data.paidDetails} history={data.scoreHistory ?? []}/>
+        : <div className="legacy-report-note" data-testid="legacy-paid-details-notice"><strong>Detailed analysis is not available for this legacy report.</strong><span>The score, sections, and context below remain available; no missing research has been filled in.</span></div>}
       <section className="snapshot-areas" aria-labelledby="snapshot-areas-title">
         <div className="snapshot-section-heading"><div><div className="question-count">The quick read</div><h2 id="snapshot-areas-title">Six lenses on the idea</h2></div><span className="muted">Directional, not definitive</span></div>
         {sections.length>0?<div className="snapshot-area-grid">{sections.map((section:any)=><article className="snapshot-area" key={section.key} data-testid={`section-report-${section.key}`}><span>{section.title}</span><strong>{section.score}</strong><div className="snapshot-area-track"><i style={{width:`${Math.max(0,Math.min(100,section.score))}%`}}/></div><p>{section.summary}</p></article>)}</div>:<div className="empty-state"><h3>Area detail is not available.</h3><p>The snapshot has a headline score but no section data to display.</p></div>}

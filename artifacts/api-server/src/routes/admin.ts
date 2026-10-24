@@ -1,4 +1,4 @@
-import { count, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 import { Router, type IRouter } from "express";
 import {
   GetVerifaiAdminOverviewResponse,
@@ -120,6 +120,8 @@ router.get("/verifai/admin/reports/:reportId", async (req, res): Promise<void> =
       sections: validationReportsTable.sections,
       comparisons: validationReportsTable.comparisons,
       nextSteps: validationReportsTable.nextSteps,
+      headlineSnapshot: validationReportsTable.headlineSnapshot,
+      paidDetails: validationReportsTable.paidDetails,
       generatedAt: validationReportsTable.generatedAt,
       isFullReport: validationReportsTable.isFullReport,
       unlockedAt: ideasTable.premiumUnlockedAt,
@@ -134,9 +136,22 @@ router.get("/verifai/admin/reports/:reportId", async (req, res): Promise<void> =
     return;
   }
 
+  const scoreHistory = await db
+    .select({
+      score: validationReportsTable.score,
+      generatedAt: validationReportsTable.generatedAt,
+    })
+    .from(validationReportsTable)
+    .where(and(
+      eq(validationReportsTable.ideaId, report.ideaId),
+      eq(validationReportsTable.ownerId, report.ownerId),
+    ))
+    .orderBy(validationReportsTable.generatedAt);
+
   res.json(
     GetVerifaiAdminReportResponse.parse({
       ...report,
+      scoreHistory,
       generatedAt: report.generatedAt.toISOString(),
       unlockedAt: report.unlockedAt?.toISOString() ?? null,
     }),

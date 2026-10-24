@@ -500,9 +500,156 @@ components:
         evidence:
           type: array
           items: { type: string }
+    ReportHeadlineSnapshot:
+      type: object
+      required: [market, audience, financialSignals, quickRatings, teasers]
+      properties:
+        market:
+          type: object
+          required: [tam, sam, som, cagr, stage]
+          properties:
+            tam: { type: ["string", "null"] }
+            sam: { type: ["string", "null"] }
+            som: { type: ["string", "null"] }
+            cagr: { type: ["string", "null"] }
+            stage:
+              type: string
+              enum: [emerging, growing, saturated, unknown]
+        audience:
+          type: object
+          required: [primarySegment, ageGroup, estimatedReachableUsers, topRegion]
+          properties:
+            primarySegment: { type: ["string", "null"] }
+            ageGroup: { type: ["string", "null"] }
+            estimatedReachableUsers: { type: ["string", "null"] }
+            topRegion: { type: ["string", "null"] }
+        financialSignals:
+          type: object
+          required: [startupCostRange, breakEvenTimeline, roiRating]
+          properties:
+            startupCostRange: { type: ["string", "null"] }
+            breakEvenTimeline: { type: ["string", "null"] }
+            roiRating:
+              type: ["string", "null"]
+              enum: [low, medium, high, null]
+        quickRatings:
+          type: object
+          required: [technicalFeasibility, competitionPressure, legalComplexity, goToMarketDifficulty]
+          properties:
+            technicalFeasibility: { type: integer, minimum: 1, maximum: 5 }
+            competitionPressure: { type: integer, minimum: 1, maximum: 5 }
+            legalComplexity: { type: integer, minimum: 1, maximum: 5 }
+            goToMarketDifficulty: { type: integer, minimum: 1, maximum: 5 }
+        teasers:
+          type: object
+          required: [criticalRiskCount, competitorReviewCount, legalReviewCount, fundingReadinessAvailable]
+          properties:
+            criticalRiskCount: { type: integer, minimum: 0 }
+            competitorReviewCount: { type: integer, minimum: 0 }
+            legalReviewCount: { type: integer, minimum: 0 }
+            fundingReadinessAvailable: { type: boolean }
+    ReportRiskItem:
+      type: object
+      required: [risk, likelihood, impact, mitigation]
+      properties:
+        risk: { type: string }
+        likelihood:
+          type: string
+          enum: [low, medium, high]
+        impact:
+          type: string
+          enum: [low, medium, high]
+        mitigation: { type: string }
+    ReportScoreBreakdown:
+      type: object
+      required: [key, title, score, weightPercent]
+      properties:
+        key:
+          type: string
+          enum: [market, technology, customers, go_to_market, risks, legal]
+        title: { type: string }
+        score: { type: integer, minimum: 0, maximum: 100 }
+        weightPercent: { type: number, minimum: 0, maximum: 100 }
+    ReportFundingReadiness:
+      type: object
+      required: [score, investorFit, relevantPrograms, pitchGaps, valuationRange, likelyQuestions]
+      properties:
+        score: { type: integer, minimum: 0, maximum: 100 }
+        investorFit:
+          type: array
+          items: { type: string }
+        relevantPrograms:
+          type: array
+          items: { type: string }
+        pitchGaps:
+          type: array
+          items: { type: string }
+        valuationRange: { type: ["string", "null"] }
+        likelyQuestions:
+          type: array
+          items: { type: string }
+    ReportActionPlan:
+      type: object
+      required: [thisWeek, thisMonth, thisQuarter, validationExperiments]
+      properties:
+        thisWeek:
+          type: array
+          items: { type: string }
+        thisMonth:
+          type: array
+          items: { type: string }
+        thisQuarter:
+          type: array
+          items: { type: string }
+        validationExperiments:
+          type: array
+          items: { type: string }
+    PaidReportDetails:
+      type: object
+      required: [scoreBreakdown, marketAnalysis, customerAnalysis, competitorAnalysis, financialModel, technicalPlan, goToMarket, riskRegister, legalCompliance, fundingReadiness, actionPlan]
+      properties:
+        scoreBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportScoreBreakdown"
+        marketAnalysis:
+          type: array
+          items: { type: string }
+        customerAnalysis:
+          type: array
+          items: { type: string }
+        competitorAnalysis:
+          type: array
+          items: { type: string }
+        financialModel:
+          type: array
+          items: { type: string }
+        technicalPlan:
+          type: array
+          items: { type: string }
+        goToMarket:
+          type: array
+          items: { type: string }
+        riskRegister:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportRiskItem"
+        legalCompliance:
+          type: array
+          items: { type: string }
+        fundingReadiness:
+          $ref: "#/components/schemas/ReportFundingReadiness"
+        actionPlan:
+          $ref: "#/components/schemas/ReportActionPlan"
+    ReportScoreHistoryEntry:
+      type: object
+      required: [score, generatedAt]
+      properties:
+        score: { type: integer, minimum: 0, maximum: 100 }
+        generatedAt: { type: string, format: date-time }
     ValidationReport:
       type: object
-      required: [id, ideaId, ideaName, score, verdict, sections, comparisons, generatedAt, isFullReport]
+      required: [id, ideaId, ideaName, score, verdict, summary, sections, comparisons, nextSteps, headlineSnapshot, paidDetails, scoreHistory, generatedAt, isFullReport]
       properties:
         id: { type: string }
         ideaId: { type: string }
@@ -523,6 +670,18 @@ components:
         nextSteps:
           type: array
           items: { type: string }
+        headlineSnapshot:
+          anyOf:
+            - $ref: "#/components/schemas/ReportHeadlineSnapshot"
+            - type: "null"
+        paidDetails:
+          anyOf:
+            - $ref: "#/components/schemas/PaidReportDetails"
+            - type: "null"
+        scoreHistory:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportScoreHistoryEntry"
         generatedAt: { type: string, format: date-time }
         isFullReport: { type: boolean }
     FounderMessageInput:
@@ -602,7 +761,7 @@ components:
       allOf:
         - $ref: "#/components/schemas/AdminReport"
         - type: object
-          required: [summary, sections, comparisons, nextSteps]
+          required: [summary, sections, comparisons, nextSteps, headlineSnapshot, paidDetails, scoreHistory]
           properties:
             summary: { type: string }
             sections:
@@ -615,6 +774,18 @@ components:
             nextSteps:
               type: array
               items: { type: string }
+            headlineSnapshot:
+              anyOf:
+                - $ref: "#/components/schemas/ReportHeadlineSnapshot"
+                - type: "null"
+            paidDetails:
+              anyOf:
+                - $ref: "#/components/schemas/PaidReportDetails"
+                - type: "null"
+            scoreHistory:
+              type: array
+              items:
+                $ref: "#/components/schemas/ReportScoreHistoryEntry"
     AdminReportPage:
       type: object
       required: [items, page, pageSize, total, totalPages]

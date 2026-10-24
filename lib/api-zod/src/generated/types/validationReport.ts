@@ -5,6 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { PaidReportDetails } from './paidReportDetails';
+import type { ReportHeadlineSnapshot } from './reportHeadlineSnapshot';
+import type { ReportScoreHistoryEntry } from './reportScoreHistoryEntry';
 import type { ReportSection } from './reportSection';
 
 export interface ValidationReport {
@@ -17,10 +20,13 @@ export interface ValidationReport {
      */
   score: number;
   verdict: string;
-  summary?: string;
+  summary: string;
   sections: ReportSection[];
   comparisons: string[];
-  nextSteps?: string[];
+  nextSteps: string[];
+  headlineSnapshot: ReportHeadlineSnapshot | null;
+  paidDetails: PaidReportDetails | null;
+  scoreHistory: ReportScoreHistoryEntry[];
   generatedAt: Date;
   isFullReport: boolean;
 }

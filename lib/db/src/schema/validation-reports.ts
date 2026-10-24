@@ -14,6 +14,77 @@ export type StoredReportSection = {
   evidence: string[];
 };
 
+export type ReportHeadlineSnapshot = {
+  market: {
+    tam: string | null;
+    sam: string | null;
+    som: string | null;
+    cagr: string | null;
+    stage: "emerging" | "growing" | "saturated" | "unknown";
+  };
+  audience: {
+    primarySegment: string | null;
+    ageGroup: string | null;
+    estimatedReachableUsers: string | null;
+    topRegion: string | null;
+  };
+  financialSignals: {
+    startupCostRange: string | null;
+    breakEvenTimeline: string | null;
+    roiRating: "low" | "medium" | "high" | null;
+  };
+  quickRatings: {
+    technicalFeasibility: number;
+    competitionPressure: number;
+    legalComplexity: number;
+    goToMarketDifficulty: number;
+  };
+  teasers: {
+    criticalRiskCount: number;
+    competitorReviewCount: number;
+    legalReviewCount: number;
+    fundingReadinessAvailable: boolean;
+  };
+};
+
+export type StoredRiskItem = {
+  risk: string;
+  likelihood: "low" | "medium" | "high";
+  impact: "low" | "medium" | "high";
+  mitigation: string;
+};
+
+export type PaidReportDetails = {
+  scoreBreakdown: Array<{
+    key: StoredReportSection["key"];
+    title: string;
+    score: number;
+    weightPercent: number;
+  }>;
+  marketAnalysis: string[];
+  customerAnalysis: string[];
+  competitorAnalysis: string[];
+  financialModel: string[];
+  technicalPlan: string[];
+  goToMarket: string[];
+  riskRegister: StoredRiskItem[];
+  legalCompliance: string[];
+  fundingReadiness: {
+    score: number;
+    investorFit: string[];
+    relevantPrograms: string[];
+    pitchGaps: string[];
+    valuationRange: string | null;
+    likelyQuestions: string[];
+  };
+  actionPlan: {
+    thisWeek: string[];
+    thisMonth: string[];
+    thisQuarter: string[];
+    validationExperiments: string[];
+  };
+};
+
 export const validationReportsTable = pgTable(
   "verifai_validation_reports",
   {
@@ -26,6 +97,8 @@ export const validationReportsTable = pgTable(
     sections: jsonb("sections").$type<StoredReportSection[]>().notNull(),
     comparisons: jsonb("comparisons").$type<string[]>().notNull().default([]),
     nextSteps: jsonb("next_steps").$type<string[]>().notNull().default([]),
+    headlineSnapshot: jsonb("headline_snapshot").$type<ReportHeadlineSnapshot | null>(),
+    paidDetails: jsonb("paid_details").$type<PaidReportDetails | null>(),
     isFullReport: boolean("is_full_report").notNull().default(false),
     generatedAt: timestamp("generated_at", { withTimezone: true }).notNull().defaultNow(),
   },
