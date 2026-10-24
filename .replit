@@ -18,3 +18,8 @@ expertMode = true
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
+
+[userenv]
+
+[userenv.shared]
+AGENTICORG = "ao_sk_178580124d8834086d04e4278af5e3b1533b1239"
