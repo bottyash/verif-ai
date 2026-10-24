@@ -1,6 +1,7 @@
 import { and, count, desc, eq, inArray } from "drizzle-orm";
 import { Router, type IRouter } from "express";
 import {
+  GetVerifaiAdminAccessResponse,
   GetVerifaiAdminOverviewResponse,
   GetVerifaiAdminReportParams,
   GetVerifaiAdminReportResponse,
@@ -17,9 +18,22 @@ import {
 } from "@workspace/db";
 import { clerkClient } from "@clerk/express";
 import { requireAuth } from "../middlewares/requireAuth";
-import { requireAdmin } from "../middlewares/requireAdmin";
+import { isVerifiedAdmin, requireAdmin } from "../middlewares/requireAdmin";
+import type { AuthenticatedRequest } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
+
+// Navigation hint only: every admin data route below still enforces requireAdmin.
+router.get("/verifai/admin/access", requireAuth, async (req, res): Promise<void> => {
+  const userId = (req as AuthenticatedRequest).userId;
+  let isAdmin = false;
+  try {
+    isAdmin = userId ? await isVerifiedAdmin(userId) : false;
+  } catch (error) {
+    req.log.warn({ err: error, userId }, "Could not resolve VerifAI admin navigation state");
+  }
+  res.json(GetVerifaiAdminAccessResponse.parse({ isAdmin }));
+});
 
 router.use("/verifai/admin", requireAuth, requireAdmin);
 

@@ -18,6 +18,14 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * @summary Check whether the signed-in user has administrator access
+ */
+export const GetVerifaiAdminAccessResponse = zod.object({
+  "isAdmin": zod.boolean()
+})
+
+
+/**
  * @summary Get VerifAI administrator metrics
  */
 export const getVerifaiAdminOverviewResponseUserCountMin = 0;
@@ -152,6 +160,23 @@ export const getVerifaiAdminReportResponseTwoPaidDetailsOneScoreBreakdownItemWei
 export const getVerifaiAdminReportResponseTwoPaidDetailsOneFundingReadinessScoreMin = 0;
 export const getVerifaiAdminReportResponseTwoPaidDetailsOneFundingReadinessScoreMax = 100;
 
+export const getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneMarketSplitItemValueMin = 0;
+
+export const getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneMarketSizingOneTamMin = 0;
+
+export const getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneMarketSizingOneSamMin = 0;
+
+export const getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneMarketSizingOneSomMin = 0;
+
+export const getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneCompetitorPositioningItemValueMin = 0;
+export const getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneCompetitorPositioningItemValueMax = 100;
+
+export const getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneRevenueScenariosItemYear1Min = 0;
+
+export const getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneRevenueScenariosItemYear2Min = 0;
+
+export const getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneRevenueScenariosItemYear3Min = 0;
+
 export const getVerifaiAdminReportResponseTwoScoreHistoryItemScoreMin = 0;
 export const getVerifaiAdminReportResponseTwoScoreHistoryItemScoreMax = 100;
 
@@ -245,7 +270,37 @@ export const GetVerifaiAdminReportResponse = zod.object({
   "thisMonth": zod.array(zod.string()),
   "thisQuarter": zod.array(zod.string()),
   "validationExperiments": zod.array(zod.string())
-})
+}),
+  "visuals": zod.union([zod.object({
+  "marketSplit": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.number().min(getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneMarketSplitItemValueMin)
+})),
+  "marketSizing": zod.union([zod.object({
+  "unit": zod.string(),
+  "tam": zod.number().min(getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneMarketSizingOneTamMin).nullable(),
+  "sam": zod.number().min(getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneMarketSizingOneSamMin).nullable(),
+  "som": zod.number().min(getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneMarketSizingOneSomMin).nullable(),
+  "assumption": zod.string()
+}),zod.null()]),
+  "competitorPositioning": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.number().min(getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneCompetitorPositioningItemValueMin).max(getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneCompetitorPositioningItemValueMax),
+  "isThisIdea": zod.boolean()
+})),
+  "revenueScenarios": zod.array(zod.object({
+  "label": zod.string(),
+  "year1": zod.number().min(getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneRevenueScenariosItemYear1Min),
+  "year2": zod.number().min(getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneRevenueScenariosItemYear2Min),
+  "year3": zod.number().min(getVerifaiAdminReportResponseTwoPaidDetailsOneVisualsOneRevenueScenariosItemYear3Min)
+})),
+  "revenueUnit": zod.string(),
+  "milestones": zod.array(zod.object({
+  "when": zod.string(),
+  "title": zod.string()
+})),
+  "assumptionNote": zod.string()
+}),zod.null()]).optional()
 }),zod.null()]),
   "scoreHistory": zod.array(zod.object({
   "score": zod.number().int().min(getVerifaiAdminReportResponseTwoScoreHistoryItemScoreMin).max(getVerifaiAdminReportResponseTwoScoreHistoryItemScoreMax),
@@ -495,6 +550,23 @@ export const runVerifaiAnalysisResponsePaidDetailsOneScoreBreakdownItemWeightPer
 export const runVerifaiAnalysisResponsePaidDetailsOneFundingReadinessScoreMin = 0;
 export const runVerifaiAnalysisResponsePaidDetailsOneFundingReadinessScoreMax = 100;
 
+export const runVerifaiAnalysisResponsePaidDetailsOneVisualsOneMarketSplitItemValueMin = 0;
+
+export const runVerifaiAnalysisResponsePaidDetailsOneVisualsOneMarketSizingOneTamMin = 0;
+
+export const runVerifaiAnalysisResponsePaidDetailsOneVisualsOneMarketSizingOneSamMin = 0;
+
+export const runVerifaiAnalysisResponsePaidDetailsOneVisualsOneMarketSizingOneSomMin = 0;
+
+export const runVerifaiAnalysisResponsePaidDetailsOneVisualsOneCompetitorPositioningItemValueMin = 0;
+export const runVerifaiAnalysisResponsePaidDetailsOneVisualsOneCompetitorPositioningItemValueMax = 100;
+
+export const runVerifaiAnalysisResponsePaidDetailsOneVisualsOneRevenueScenariosItemYear1Min = 0;
+
+export const runVerifaiAnalysisResponsePaidDetailsOneVisualsOneRevenueScenariosItemYear2Min = 0;
+
+export const runVerifaiAnalysisResponsePaidDetailsOneVisualsOneRevenueScenariosItemYear3Min = 0;
+
 export const runVerifaiAnalysisResponseScoreHistoryItemScoreMin = 0;
 export const runVerifaiAnalysisResponseScoreHistoryItemScoreMax = 100;
 
@@ -583,7 +655,37 @@ export const RunVerifaiAnalysisResponse = zod.object({
   "thisMonth": zod.array(zod.string()),
   "thisQuarter": zod.array(zod.string()),
   "validationExperiments": zod.array(zod.string())
-})
+}),
+  "visuals": zod.union([zod.object({
+  "marketSplit": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.number().min(runVerifaiAnalysisResponsePaidDetailsOneVisualsOneMarketSplitItemValueMin)
+})),
+  "marketSizing": zod.union([zod.object({
+  "unit": zod.string(),
+  "tam": zod.number().min(runVerifaiAnalysisResponsePaidDetailsOneVisualsOneMarketSizingOneTamMin).nullable(),
+  "sam": zod.number().min(runVerifaiAnalysisResponsePaidDetailsOneVisualsOneMarketSizingOneSamMin).nullable(),
+  "som": zod.number().min(runVerifaiAnalysisResponsePaidDetailsOneVisualsOneMarketSizingOneSomMin).nullable(),
+  "assumption": zod.string()
+}),zod.null()]),
+  "competitorPositioning": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.number().min(runVerifaiAnalysisResponsePaidDetailsOneVisualsOneCompetitorPositioningItemValueMin).max(runVerifaiAnalysisResponsePaidDetailsOneVisualsOneCompetitorPositioningItemValueMax),
+  "isThisIdea": zod.boolean()
+})),
+  "revenueScenarios": zod.array(zod.object({
+  "label": zod.string(),
+  "year1": zod.number().min(runVerifaiAnalysisResponsePaidDetailsOneVisualsOneRevenueScenariosItemYear1Min),
+  "year2": zod.number().min(runVerifaiAnalysisResponsePaidDetailsOneVisualsOneRevenueScenariosItemYear2Min),
+  "year3": zod.number().min(runVerifaiAnalysisResponsePaidDetailsOneVisualsOneRevenueScenariosItemYear3Min)
+})),
+  "revenueUnit": zod.string(),
+  "milestones": zod.array(zod.object({
+  "when": zod.string(),
+  "title": zod.string()
+})),
+  "assumptionNote": zod.string()
+}),zod.null()]).optional()
 }),zod.null()]),
   "scoreHistory": zod.array(zod.object({
   "score": zod.number().int().min(runVerifaiAnalysisResponseScoreHistoryItemScoreMin).max(runVerifaiAnalysisResponseScoreHistoryItemScoreMax),
@@ -629,6 +731,23 @@ export const getVerifaiReportResponsePaidDetailsOneScoreBreakdownItemWeightPerce
 
 export const getVerifaiReportResponsePaidDetailsOneFundingReadinessScoreMin = 0;
 export const getVerifaiReportResponsePaidDetailsOneFundingReadinessScoreMax = 100;
+
+export const getVerifaiReportResponsePaidDetailsOneVisualsOneMarketSplitItemValueMin = 0;
+
+export const getVerifaiReportResponsePaidDetailsOneVisualsOneMarketSizingOneTamMin = 0;
+
+export const getVerifaiReportResponsePaidDetailsOneVisualsOneMarketSizingOneSamMin = 0;
+
+export const getVerifaiReportResponsePaidDetailsOneVisualsOneMarketSizingOneSomMin = 0;
+
+export const getVerifaiReportResponsePaidDetailsOneVisualsOneCompetitorPositioningItemValueMin = 0;
+export const getVerifaiReportResponsePaidDetailsOneVisualsOneCompetitorPositioningItemValueMax = 100;
+
+export const getVerifaiReportResponsePaidDetailsOneVisualsOneRevenueScenariosItemYear1Min = 0;
+
+export const getVerifaiReportResponsePaidDetailsOneVisualsOneRevenueScenariosItemYear2Min = 0;
+
+export const getVerifaiReportResponsePaidDetailsOneVisualsOneRevenueScenariosItemYear3Min = 0;
 
 export const getVerifaiReportResponseScoreHistoryItemScoreMin = 0;
 export const getVerifaiReportResponseScoreHistoryItemScoreMax = 100;
@@ -718,7 +837,37 @@ export const GetVerifaiReportResponse = zod.object({
   "thisMonth": zod.array(zod.string()),
   "thisQuarter": zod.array(zod.string()),
   "validationExperiments": zod.array(zod.string())
-})
+}),
+  "visuals": zod.union([zod.object({
+  "marketSplit": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.number().min(getVerifaiReportResponsePaidDetailsOneVisualsOneMarketSplitItemValueMin)
+})),
+  "marketSizing": zod.union([zod.object({
+  "unit": zod.string(),
+  "tam": zod.number().min(getVerifaiReportResponsePaidDetailsOneVisualsOneMarketSizingOneTamMin).nullable(),
+  "sam": zod.number().min(getVerifaiReportResponsePaidDetailsOneVisualsOneMarketSizingOneSamMin).nullable(),
+  "som": zod.number().min(getVerifaiReportResponsePaidDetailsOneVisualsOneMarketSizingOneSomMin).nullable(),
+  "assumption": zod.string()
+}),zod.null()]),
+  "competitorPositioning": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.number().min(getVerifaiReportResponsePaidDetailsOneVisualsOneCompetitorPositioningItemValueMin).max(getVerifaiReportResponsePaidDetailsOneVisualsOneCompetitorPositioningItemValueMax),
+  "isThisIdea": zod.boolean()
+})),
+  "revenueScenarios": zod.array(zod.object({
+  "label": zod.string(),
+  "year1": zod.number().min(getVerifaiReportResponsePaidDetailsOneVisualsOneRevenueScenariosItemYear1Min),
+  "year2": zod.number().min(getVerifaiReportResponsePaidDetailsOneVisualsOneRevenueScenariosItemYear2Min),
+  "year3": zod.number().min(getVerifaiReportResponsePaidDetailsOneVisualsOneRevenueScenariosItemYear3Min)
+})),
+  "revenueUnit": zod.string(),
+  "milestones": zod.array(zod.object({
+  "when": zod.string(),
+  "title": zod.string()
+})),
+  "assumptionNote": zod.string()
+}),zod.null()]).optional()
 }),zod.null()]),
   "scoreHistory": zod.array(zod.object({
   "score": zod.number().int().min(getVerifaiReportResponseScoreHistoryItemScoreMin).max(getVerifaiReportResponseScoreHistoryItemScoreMax),

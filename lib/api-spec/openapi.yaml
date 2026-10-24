@@ -26,6 +26,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /verifai/admin/access:
+    get:
+      operationId: getVerifaiAdminAccess
+      tags: [verifai]
+      summary: Check whether the signed-in user has administrator access
+      responses:
+        "200":
+          description: Administrator access state for navigation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAccess"
+        "401":
+          description: Authentication required
   /verifai/admin/overview:
     get:
       operationId: getVerifaiAdminOverview
@@ -628,6 +642,68 @@ components:
         validationExperiments:
           type: array
           items: { type: string }
+    ReportChartPoint:
+      type: object
+      required: [label, value]
+      properties:
+        label: { type: string }
+        value: { type: number, minimum: 0 }
+    ReportMarketSizing:
+      type: object
+      required: [unit, tam, sam, som, assumption]
+      properties:
+        unit: { type: string }
+        tam: { type: ["number", "null"], minimum: 0 }
+        sam: { type: ["number", "null"], minimum: 0 }
+        som: { type: ["number", "null"], minimum: 0 }
+        assumption: { type: string }
+    ReportCompetitorPoint:
+      type: object
+      required: [label, value, isThisIdea]
+      properties:
+        label: { type: string }
+        value: { type: number, minimum: 0, maximum: 100 }
+        isThisIdea: { type: boolean }
+    ReportRevenueScenario:
+      type: object
+      required: [label, year1, year2, year3]
+      properties:
+        label: { type: string }
+        year1: { type: number, minimum: 0 }
+        year2: { type: number, minimum: 0 }
+        year3: { type: number, minimum: 0 }
+    ReportMilestone:
+      type: object
+      required: [when, title]
+      properties:
+        when: { type: string }
+        title: { type: string }
+    ReportVisuals:
+      type: object
+      required: [marketSplit, marketSizing, competitorPositioning, revenueScenarios, revenueUnit, milestones, assumptionNote]
+      properties:
+        marketSplit:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportChartPoint"
+        marketSizing:
+          anyOf:
+            - $ref: "#/components/schemas/ReportMarketSizing"
+            - type: "null"
+        competitorPositioning:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportCompetitorPoint"
+        revenueScenarios:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportRevenueScenario"
+        revenueUnit: { type: string }
+        milestones:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportMilestone"
+        assumptionNote: { type: string }
     PaidReportDetails:
       type: object
       required: [scoreBreakdown, marketAnalysis, customerAnalysis, competitorAnalysis, financialModel, technicalPlan, goToMarket, riskRegister, legalCompliance, fundingReadiness, actionPlan]
@@ -665,6 +741,10 @@ components:
           $ref: "#/components/schemas/ReportFundingReadiness"
         actionPlan:
           $ref: "#/components/schemas/ReportActionPlan"
+        visuals:
+          anyOf:
+            - $ref: "#/components/schemas/ReportVisuals"
+            - type: "null"
     ReportScoreHistoryEntry:
       type: object
       required: [score, generatedAt]
@@ -774,6 +854,11 @@ components:
           type: string
           enum: [CREATED, PENDING, PAID, FAILED, CANCELLED]
         unlocked: { type: boolean }
+    AdminAccess:
+      type: object
+      required: [isAdmin]
+      properties:
+        isAdmin: { type: boolean }
     AdminOverview:
       type: object
       required: [userCount, reportCount, freeOnlyReportCount, unlockClickCount, demoUnlockCount, payIntentAnswerCount, payIntentYesCount, payIntentMaybeCount, payIntentNoCount, payIntentSkipCount, payIntentYesRate, checkoutAttemptCount, paymentCompletedCount, paymentConversionRate]

@@ -54,6 +54,22 @@ export type StoredRiskItem = {
   mitigation: string;
 };
 
+export type ReportVisuals = {
+  marketSplit: Array<{ label: string; value: number }>;
+  marketSizing: {
+    unit: string;
+    tam: number | null;
+    sam: number | null;
+    som: number | null;
+    assumption: string;
+  } | null;
+  competitorPositioning: Array<{ label: string; value: number; isThisIdea: boolean }>;
+  revenueScenarios: Array<{ label: string; year1: number; year2: number; year3: number }>;
+  revenueUnit: string;
+  milestones: Array<{ when: string; title: string }>;
+  assumptionNote: string;
+};
+
 export type PaidReportDetails = {
   scoreBreakdown: Array<{
     key: StoredReportSection["key"];
@@ -83,6 +99,7 @@ export type PaidReportDetails = {
     thisQuarter: string[];
     validationExperiments: string[];
   };
+  visuals?: ReportVisuals | null;
 };
 
 export const validationReportsTable = pgTable(

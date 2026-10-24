@@ -9,6 +9,7 @@ import type { ReportActionPlan } from './reportActionPlan';
 import type { ReportFundingReadiness } from './reportFundingReadiness';
 import type { ReportRiskItem } from './reportRiskItem';
 import type { ReportScoreBreakdown } from './reportScoreBreakdown';
+import type { ReportVisuals } from './reportVisuals';
 
 export interface PaidReportDetails {
   scoreBreakdown: ReportScoreBreakdown[];
@@ -22,4 +23,5 @@ export interface PaidReportDetails {
   legalCompliance: string[];
   fundingReadiness: ReportFundingReadiness;
   actionPlan: ReportActionPlan;
+  visuals?: ReportVisuals | null;
 }

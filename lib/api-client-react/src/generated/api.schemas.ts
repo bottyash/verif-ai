@@ -309,6 +309,67 @@ export interface ReportActionPlan {
   validationExperiments: string[];
 }
 
+export interface ReportChartPoint {
+  label: string;
+  /** @minimum 0 */
+  value: number;
+}
+
+export interface ReportMarketSizing {
+  unit: string;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  tam: number | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  sam: number | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  som: number | null;
+  assumption: string;
+}
+
+export interface ReportCompetitorPoint {
+  label: string;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  value: number;
+  isThisIdea: boolean;
+}
+
+export interface ReportRevenueScenario {
+  label: string;
+  /** @minimum 0 */
+  year1: number;
+  /** @minimum 0 */
+  year2: number;
+  /** @minimum 0 */
+  year3: number;
+}
+
+export interface ReportMilestone {
+  when: string;
+  title: string;
+}
+
+export interface ReportVisuals {
+  marketSplit: ReportChartPoint[];
+  marketSizing: ReportMarketSizing | null;
+  competitorPositioning: ReportCompetitorPoint[];
+  revenueScenarios: ReportRevenueScenario[];
+  revenueUnit: string;
+  milestones: ReportMilestone[];
+  assumptionNote: string;
+}
+
 export interface PaidReportDetails {
   scoreBreakdown: ReportScoreBreakdown[];
   marketAnalysis: string[];
@@ -321,6 +382,7 @@ export interface PaidReportDetails {
   legalCompliance: string[];
   fundingReadiness: ReportFundingReadiness;
   actionPlan: ReportActionPlan;
+  visuals?: ReportVisuals | null;
 }
 
 export interface ReportScoreHistoryEntry {
@@ -458,6 +520,10 @@ export interface PaymentStatus {
   paymentId: string;
   status: PaymentStatusStatus;
   unlocked: boolean;
+}
+
+export interface AdminAccess {
+  isAdmin: boolean;
 }
 
 export interface AdminOverview {

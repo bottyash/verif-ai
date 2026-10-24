@@ -26,7 +26,8 @@ _Populate as you build — short repo map plus pointers to the source-of-truth f
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Report chart data (`paidDetails.visuals`) is optional and parsed leniently, so older stored reports still load; the UI hides any chart whose data is missing. All modelled figures are labelled as assumptions, in INR.
+- The admin link in the workspace menu uses `GET /verifai/admin/access` as a navigation hint only; every admin data route still enforces the server-side allowlist.
 
 ## Product
 
@@ -34,7 +35,9 @@ _Describe the high-level user-facing capabilities of this app once they exist._
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Typography: Sora for body and headlines; DaVinci for accents. DaVinci is a paid font, so Cormorant Garamond stands in via `--app-font-accent` in `artifacts/verifai/src/index.css` — put a licensed DaVinci file first in that variable to switch.
+- Logo: a single "V with a dot" mark (xAI-inspired cut strokes), shared from `src/components/brand.tsx` and mirrored in `public/favicon.svg` / `public/logo.svg`.
+- No permanent sidebar; navigation lives in a top-bar menu button. Keep layout and proportions close to the existing design when restyling.
 
 ## Gotchas
 

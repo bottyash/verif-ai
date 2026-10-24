@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './adminAccess';
 export * from './adminOverview';
 export * from './adminReport';
 export * from './adminReportDetail';
@@ -41,6 +42,8 @@ export * from './questionTier';
 export * from './questionTierProperty';
 export * from './questionTierTier';
 export * from './reportActionPlan';
+export * from './reportChartPoint';
+export * from './reportCompetitorPoint';
 export * from './reportFundingReadiness';
 export * from './reportHeadlineSnapshot';
 export * from './reportHeadlineSnapshotAudience';
@@ -50,6 +53,9 @@ export * from './reportHeadlineSnapshotMarket';
 export * from './reportHeadlineSnapshotMarketStage';
 export * from './reportHeadlineSnapshotQuickRatings';
 export * from './reportHeadlineSnapshotTeasers';
+export * from './reportMarketSizing';
+export * from './reportMilestone';
+export * from './reportRevenueScenario';
 export * from './reportRiskItem';
 export * from './reportRiskItemImpact';
 export * from './reportRiskItemLikelihood';
@@ -58,5 +64,6 @@ export * from './reportScoreBreakdownKey';
 export * from './reportScoreHistoryEntry';
 export * from './reportSection';
 export * from './reportSectionKey';
+export * from './reportVisuals';
 export * from './unlockClickResponse';
 export * from './validationReport';

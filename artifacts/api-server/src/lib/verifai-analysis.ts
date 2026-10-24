@@ -15,6 +15,34 @@ const agentOutputSchema = z.object({
   evidence: z.array(z.string()).min(1),
 });
 
+const finiteNumber = z.coerce.number().finite().min(0);
+
+// Chart data is optional: a malformed visuals block must never fail the whole report.
+const visualsSchema = z.object({
+  marketSplit: z.array(z.object({ label: z.string().min(1).max(60), value: finiteNumber })).max(6).catch([]),
+  marketSizing: z.object({
+    unit: z.string().min(1).max(40),
+    tam: finiteNumber.nullable(),
+    sam: finiteNumber.nullable(),
+    som: finiteNumber.nullable(),
+    assumption: z.string().min(1).max(400),
+  }).nullable().catch(null),
+  competitorPositioning: z.array(z.object({
+    label: z.string().min(1).max(60),
+    value: finiteNumber.max(100),
+    isThisIdea: z.boolean().catch(false),
+  })).max(6).catch([]),
+  revenueScenarios: z.array(z.object({
+    label: z.string().min(1).max(40),
+    year1: finiteNumber,
+    year2: finiteNumber,
+    year3: finiteNumber,
+  })).max(3).catch([]),
+  revenueUnit: z.string().max(40).catch("INR lakh"),
+  milestones: z.array(z.object({ when: z.string().min(1).max(40), title: z.string().min(1).max(140) })).max(6).catch([]),
+  assumptionNote: z.string().max(400).catch("All figures are directional assumptions, not research."),
+});
+
 const synthesisSchema = z.object({
   verdict: z.string().min(1),
   summary: z.string().min(1),
@@ -74,6 +102,7 @@ const synthesisSchema = z.object({
       thisQuarter: z.array(z.string().min(1)).min(1).max(4),
       validationExperiments: z.array(z.string().min(1)).min(1).max(4),
     }),
+    visuals: visualsSchema.nullable().optional().catch(null),
   }),
 });
 
@@ -199,12 +228,23 @@ Return exactly one JSON object with these keys and shapes:
     "riskRegister": [{"risk":"string","likelihood":"low|medium|high","impact":"low|medium|high","mitigation":"string"}],
     "legalCompliance": ["string"],
     "fundingReadiness": {"score": 50, "investorFit": ["string"], "relevantPrograms": ["string"], "pitchGaps": ["string"], "valuationRange": "string or null", "likelyQuestions": ["up to four strings"]},
-    "actionPlan": {"thisWeek":["string"],"thisMonth":["string"],"thisQuarter":["string"],"validationExperiments":["string"]}
+    "actionPlan": {"thisWeek":["string"],"thisMonth":["string"],"thisQuarter":["string"],"validationExperiments":["string"]},
+    "visuals": {
+      "marketSplit": [{"label":"string","value":40}],
+      "marketSizing": {"unit":"INR crore","tam":1000,"sam":200,"som":10,"assumption":"string"} or null,
+      "competitorPositioning": [{"label":"string","value":60,"isThisIdea":false}],
+      "revenueScenarios": [{"label":"Conservative","year1":5,"year2":20,"year3":60}],
+      "revenueUnit": "INR lakh",
+      "milestones": [{"when":"Week 1-2","title":"string"}],
+      "assumptionNote": "string"
+    }
   }
 }
 Do not add markdown or extra keys. In the actual response, use JSON null (not the text "null") for unknown nullable fields. Use only the founder's input and supplied analyst sections; no web research is connected. Never invent market sizes, CAGR, reachable-user counts, startup costs, break-even dates, named competitors, funding programs, valuations, customer interviews, or traction. For any headline field that cannot be estimated from supplied evidence and explicit assumptions, return null. If a numeric estimate is possible, show a range, label it as directional, and state its key assumption in the paid details. Market stage may be unknown.
 
 Use 1-6 concise, useful bullets per paid category. Market analysis should cover sizing method and assumptions, bottom-up/top-down only when supported, trends, growth drivers/headwinds, timing, geography, and adjacent opportunities; mark external trend data as research needed. Customer analysis should cover personas, segment characteristics, willingness to pay, pain points/jobs-to-be-done, CAC/LTV, churn, and retention, marking unsupported values as assumptions. Competitor analysis should compare direct/indirect alternatives, differentiation and moat; no named competitors, market shares, or funding history unless present in founder input. Financial model should cover revenue model, pricing, scenario projections, unit economics, burn/runway, break-even, startup costs, funding needs, ROI, and sensitivity; label all modeled figures as assumptions. Technical plan should cover stack and rationale, architecture, MVP vs v2, complexity, timeline/team, build-vs-buy, cost, scalability, and risks. Go-to-market should cover staged growth, channel ranking, first 100 customers, messaging, partnerships, and a 90-day plan; do not invent CAC. Risk register items each need likelihood, impact, and a practical mitigation. Legal and compliance should cover possible entity, licensing, privacy, IP, sector, founder agreement, ESOP, and deadlines as questions for qualified Indian counsel, not legal advice. RelevantPrograms may name only a program supplied by the founder; otherwise say research is needed. ValuationRange must be null unless concrete supporting inputs were supplied. Funding readiness is a cautious directional score based on evidence completeness, not investor endorsement. Action plan should prioritize this week, this month, this quarter, and small validation experiments.
+
+The visuals object feeds charts and must stay consistent with the paid details. marketSplit: 2-5 customer segments or use-case shares of the founder's starting market, values are percentages summing to about 100, based on the founder's own description; return [] if there is no basis. marketSizing: a directional top-down or bottom-up estimate in INR crore where tam >= sam >= som, with the key assumption stated in one sentence; return null when there is no supportable basis. competitorPositioning: 3-5 entries scoring 0-100 how well each alternative solves the founder's job today, using categories or status-quo workarounds (for example "Spreadsheets and WhatsApp") rather than invented company names, plus exactly one entry for this idea with isThisIdea true. revenueScenarios: Conservative, Base and Optimistic projected revenue for years 1-3 in INR lakh, consistent with the financial model; return [] if pricing is unknown. milestones: 3-6 short dated steps (for example "Week 1-2", "Month 2", "Quarter 2") drawn from the action plan. assumptionNote: one sentence stating that every figure is a modelled assumption and estimate, not market research. Never present these numbers as facts.
 
 For quick ratings use integers 1-5: technicalFeasibility 5 means easier to build; competitionPressure 5 means more crowded; legalComplexity 5 means more complex; goToMarketDifficulty 5 means harder to acquire customers. When evidence is thin, use neutral 3 and explain uncertainty in paid details. The verdict and summary explain why the idea received its score and are only shown in the paid report. Comparisons should describe trade-offs versus status quo/workarounds without fabricating named companies. The nextSteps are AI-generated founder suggestions, not requests to rewrite answers: exactly three suggestions, one framing prefixed FRAME:, one small execution experiment prefixed TEST:, and one idea/product refinement prefixed SHARPEN:. State that this is an early directional assessment, not investment, legal, or financial advice.
 `.trim();
