@@ -22,4 +22,4 @@ timeoutMs = 20000
 [userenv]
 
 [userenv.shared]
-AGENTICORG_BASE_URL = "https://app.agenticorg.ai"
+AGENTICORG_BASE_URL = "https://agenticorg.hackathon.pinelabs.com"
