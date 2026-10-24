@@ -3,8 +3,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import {
   ArrowLeft, ArrowRight, ArrowUpRight, Check, ChevronRight,
   CircleHelp, Compass, FileText, Layers3, Lightbulb, LockKeyhole,
-  MessageCircle, Plus, RotateCw, UserRound, LogOut, Send, Users,
-  MousePointerClick, ShieldAlert, ServerCrash, X,
+  MessageCircle, Plus, RotateCw, UserRound, LogOut, Send,
 } from 'lucide-react';
 import {
   ClerkProvider,
@@ -21,14 +20,10 @@ import {
   getGetVerifaiIdeaQueryKey,
   getGetVerifaiMessagesQueryKey,
   getGetVerifaiReportQueryKey,
-  getGetVerifaiAdminReportQueryKey,
   getListVerifaiIdeasQueryKey,
   useCreateVerifaiIdea,
   useGenerateVerifaiQuestions,
   useGetVerifaiDashboard,
-  useGetVerifaiAdminOverview,
-  useGetVerifaiAdminReports,
-  useGetVerifaiAdminReport,
   useGetVerifaiIdea,
   useGetVerifaiMessages,
   useGetVerifaiReport,
@@ -37,7 +32,6 @@ import {
   useSaveVerifaiAnswers,
   useSendVerifaiMessage,
   useDemoUnlockVerifaiReport,
-  useTrackVerifaiUnlockClick,
 } from '@workspace/api-client-react';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, useParams } from 'wouter';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -186,7 +180,6 @@ function Shell({ children, title = 'Workspace' }: { children: ReactNode; title?:
         <nav>
           <Link href="/dashboard" className={`side-link ${location === '/dashboard' ? 'active' : ''}`} data-testid="link-dashboard"><Compass size={17}/><span>Overview</span></Link>
           <Link href="/new" className={`side-link ${location === '/new' ? 'active' : ''}`} data-testid="link-new-idea"><Plus size={17}/><span>New idea</span></Link>
-          <Link href="/admin" className={`side-link ${location === '/admin' ? 'active' : ''}`} data-testid="link-admin-sidebar"><Users size={17}/><span>Admin</span></Link>
         </nav>
       </div>
       <div className="sidebar-bottom">
@@ -196,7 +189,7 @@ function Shell({ children, title = 'Workspace' }: { children: ReactNode; title?:
       </div>
     </aside>
     <div className="workspace-main">
-      <header className="topbar"><div className="crumb"><span className="mobile-only">VERIFAI / </span>{title.toUpperCase()}</div><div className="topbar-right"><Link href="/admin" className="admin-top-link" data-testid="link-admin-topbar">Admin</Link><span>India · INR</span><Link href="/account" aria-label="Account" className="avatar" data-testid="link-avatar">F</Link></div></header>
+      <header className="topbar"><div className="crumb"><span className="mobile-only">VERIFAI / </span>{title.toUpperCase()}</div><div className="topbar-right"><span>India · INR</span><Link href="/account" aria-label="Account" className="avatar" data-testid="link-avatar">F</Link></div></header>
       {children}
     </div>
   </div>;
@@ -204,273 +197,6 @@ function Shell({ children, title = 'Workspace' }: { children: ReactNode; title?:
 
 function LoadingPage() {
   return <div className="page"><div className="skeleton" style={{height:13,width:150,marginBottom:22}}/><div className="skeleton" style={{height:46,width:'50%',marginBottom:18}}/><div className="skeleton" style={{height:90,marginBottom:32}}/><div className="loading-stack">{[1,2,3].map((n)=><div className="skeleton" key={n} style={{height:84}}/>)}</div></div>;
-}
-
-function SnapshotReadout({ snapshot, prefix = 'snapshot' }: { snapshot: any; prefix?: string }) {
-  const value = (item: unknown) => item == null || item === '' ? 'Needs validation' : String(item);
-  const groups = [
-    { title: 'Market shape', items: [['Total addressable market', snapshot.market?.tam], ['Serviceable market', snapshot.market?.sam], ['Obtainable market', snapshot.market?.som], ['Growth rate', snapshot.market?.cagr], ['Market stage', snapshot.market?.stage]] },
-    { title: 'Who it may serve', items: [['Primary segment', snapshot.audience?.primarySegment], ['Age group', snapshot.audience?.ageGroup], ['Reachable users', snapshot.audience?.estimatedReachableUsers], ['Top region', snapshot.audience?.topRegion]] },
-    { title: 'Financial signals', items: [['Startup cost range', snapshot.financialSignals?.startupCostRange], ['Break-even timeline', snapshot.financialSignals?.breakEvenTimeline], ['ROI rating', snapshot.financialSignals?.roiRating]] },
-  ];
-  const ratings = [
-    ['Technical feasibility', snapshot.quickRatings?.technicalFeasibility],
-    ['Competition pressure', snapshot.quickRatings?.competitionPressure],
-    ['Legal complexity', snapshot.quickRatings?.legalComplexity],
-    ['Go-to-market difficulty', snapshot.quickRatings?.goToMarketDifficulty],
-  ] as const;
-  return <section className="snapshot-readout" data-testid={`${prefix}-headline-snapshot`}>
-    <div className="snapshot-section-heading"><div><div className="question-count">Headline snapshot</div><h2>What the current inputs suggest</h2></div><span className="muted">Directional, not market research</span></div>
-    <div className="snapshot-readout-groups">{groups.map((group)=><article className="snapshot-readout-group" key={group.title}>
-      <h3>{group.title}</h3><dl>{group.items.map(([label, item])=><div key={label}><dt>{label}</dt><dd>{value(item)}</dd></div>)}</dl>
-    </article>)}</div>
-    <article className="snapshot-readout-group quick-ratings"><h3>Quick ratings <span>1–5 · higher means more of the named quality or challenge</span></h3>
-      <div className="rating-list">{ratings.map(([label, rating])=><div className="rating-row" key={label}><span>{label}</span><strong>{rating == null ? 'Needs validation' : `${rating} / 5`}</strong></div>)}</div>
-    </article>
-    <div className="teaser-strip" aria-label="Locked report details">
-      <div><strong>{snapshot.teasers?.criticalRiskCount ?? '—'}</strong><span>critical risks to review</span></div>
-      <div><strong>{snapshot.teasers?.competitorReviewCount ?? '—'}</strong><span>competitor notes</span></div>
-      <div><strong>{snapshot.teasers?.legalReviewCount ?? '—'}</strong><span>legal checks</span></div>
-      <div><strong>{snapshot.teasers?.fundingReadinessAvailable ? 'Available' : 'Not included'}</strong><span>funding readiness</span></div>
-    </div>
-  </section>;
-}
-
-function DetailList({ title, items }: { title: string; items?: string[] | null }) {
-  return <section className="paid-detail-card"><h3>{title}</h3>{items?.length ? <ul>{items.map((item, index)=><li key={`${index}-${item}`}>{item}</li>)}</ul> : <p className="muted">No detail was included for this area.</p>}</section>;
-}
-
-function PaidDetailsReadout({ details, history }: { details: any; history?: any[] }) {
-  const categories = [
-    ['Market analysis', details.marketAnalysis],
-    ['Customer analysis', details.customerAnalysis],
-    ['Competitor analysis', details.competitorAnalysis],
-    ['Financial model', details.financialModel],
-    ['Technical plan', details.technicalPlan],
-    ['Go-to-market', details.goToMarket],
-    ['Legal and compliance', details.legalCompliance],
-  ] as const;
-  const funding = details.fundingReadiness;
-  const plan = details.actionPlan;
-  return <div className="paid-details-readout" data-testid="paid-report-details">
-    <section className="paid-breakdown">
-      <div className="snapshot-section-heading"><div><div className="question-count">How the score is weighted</div><h2>Score breakdown</h2></div></div>
-      {details.scoreBreakdown?.length ? <div className="breakdown-list">{details.scoreBreakdown.map((item: any)=><div className="breakdown-row" key={item.key}><div><strong>{item.title}</strong><span>{item.weightPercent}% weight</span></div><b>{item.score}<small>/100</small></b></div>)}</div> : <p className="muted">No score breakdown was included.</p>}
-    </section>
-    {history && <section className="score-history"><div className="snapshot-section-heading"><div><div className="question-count">Change over time</div><h2>Score history</h2></div></div>
-      {history.length ? <div className="history-list">{history.map((entry,index)=><div className="history-row" key={`${entry.generatedAt}-${index}`}><strong>{entry.score}<small>/100</small></strong><time dateTime={entry.generatedAt}>{new Date(entry.generatedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</time></div>)}</div> : <p className="muted">This is the first recorded score for this report.</p>}
-    </section>}
-    <div className="paid-category-grid">{categories.map(([title, items])=><DetailList key={title} title={title} items={items}/>)}</div>
-    <section className="paid-detail-card risk-register"><h3>Risk register</h3>{details.riskRegister?.length ? <div className="risk-list">{details.riskRegister.map((item:any,index:number)=><article key={`${item.risk}-${index}`}><strong>{item.risk}</strong><div><span>Likelihood: {item.likelihood}</span><span>Impact: {item.impact}</span></div><p>{item.mitigation}</p></article>)}</div> : <p className="muted">No specific risks were listed.</p>}</section>
-    {funding && <section className="funding-readiness"><div className="funding-score"><span>Funding readiness</span><strong>{funding.score}<small>/100</small></strong></div><div className="funding-content">
-      <DetailList title="Potential investor fit" items={funding.investorFit}/><DetailList title="Relevant programs" items={funding.relevantPrograms}/><DetailList title="Pitch gaps" items={funding.pitchGaps}/><DetailList title="Likely investor questions" items={funding.likelyQuestions}/>
-      <div className="valuation-note"><span>Valuation range</span><strong>{funding.valuationRange ?? 'Needs validation'}</strong></div>
-    </div></section>}
-    {plan && <section className="action-plan"><div className="snapshot-section-heading"><div><div className="question-count">A practical sequence</div><h2>Action plan</h2></div></div><div className="action-plan-grid">
-      <DetailList title="This week" items={plan.thisWeek}/><DetailList title="This month" items={plan.thisMonth}/><DetailList title="This quarter" items={plan.thisQuarter}/><DetailList title="Validation experiments" items={plan.validationExperiments}/>
-    </div></section>}
-  </div>;
-}
-
-function AdminDashboard() {
-  const [page, setPage] = useState(1);
-  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
-  const pageSize = 10;
-  const overview = useGetVerifaiAdminOverview();
-  const reports = useGetVerifaiAdminReports({ page, pageSize });
-  const detail = useGetVerifaiAdminReport(selectedReportId ?? '', {
-    query: {
-      enabled: Boolean(selectedReportId),
-      queryKey: getGetVerifaiAdminReportQueryKey(selectedReportId ?? ''),
-    },
-  });
-  const statusOf = (error: unknown) => typeof error === 'object' && error !== null && 'status' in error
-    ? Number((error as { status?: unknown }).status)
-    : undefined;
-  const errorStatus = statusOf(overview.error) ?? statusOf(reports.error);
-  const retry = () => {
-    void overview.refetch();
-    void reports.refetch();
-  };
-  const count = (value: number) => value.toLocaleString('en-IN');
-  const dateTime = (value: string) => {
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime())
-      ? 'Time unavailable'
-      : parsed.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  };
-
-  if (overview.isLoading || reports.isLoading) {
-    return <Shell title="Admin"><main className="page admin-page" data-testid="admin-loading">
-      <div className="admin-heading-skeleton"><div className="skeleton" style={{height:12,width:120}}/><div className="skeleton" style={{height:46,width:'52%',marginTop:17}}/><div className="skeleton" style={{height:16,width:'36%',marginTop:12}}/></div>
-      <div className="admin-metric-skeletons">{[1,2,3,4,5,6].map((item)=><div className="skeleton" key={item} style={{height:118}}/>)}</div>
-      <div className="skeleton" style={{height:360,marginTop:36}}/>
-    </main></Shell>;
-  }
-
-  if (errorStatus === 401 || errorStatus === 403) {
-    const unauthenticated = errorStatus === 401;
-    return <Shell title="Admin"><main className="page admin-page">
-      <section className="admin-access-state" role="alert" data-testid={unauthenticated ? 'status-admin-unauthorized' : 'status-admin-forbidden'}>
-        <div className="admin-state-icon"><ShieldAlert size={22}/></div>
-        <div className="eyebrow">Access response · {errorStatus}</div>
-        <h1>{unauthenticated ? 'Sign in to continue.' : 'This area is not available to this account.'}</h1>
-        <p>{unauthenticated ? 'The server did not accept the current session. Sign in and try the page again.' : 'The server has not granted access to this admin data. No reports or metrics are shown.'}</p>
-        {unauthenticated
-          ? <Link href="/sign-in" className="btn btn-primary" data-testid="link-admin-signin">Go to sign in <ArrowRight size={15}/></Link>
-          : <Link href="/dashboard" className="btn btn-outline" data-testid="link-admin-return">Back to workspace <ArrowLeft size={15}/></Link>}
-      </section>
-    </main></Shell>;
-  }
-
-  if (errorStatus === 503) {
-    return <Shell title="Admin"><main className="page admin-page">
-      <section className="admin-access-state admin-error-state" role="alert" data-testid="status-admin-unavailable">
-        <div className="admin-state-icon"><ServerCrash size={22}/></div>
-        <div className="eyebrow">Service unavailable · 503</div>
-        <h1>Admin access needs setup.</h1>
-        <p>The server could not confirm administrator access. If you own this workspace, configure a verified admin email for this environment; otherwise try again later. Access stays closed until verification succeeds.</p>
-        <button className="btn btn-primary" onClick={retry} data-testid="button-admin-retry"><RotateCw size={15}/> Try again</button>
-      </section>
-    </main></Shell>;
-  }
-
-  if (overview.isError || reports.isError || !overview.data || !reports.data) {
-    return <Shell title="Admin"><main className="page admin-page">
-      <section className="admin-access-state admin-error-state" role="alert" data-testid="status-admin-error">
-        <div className="admin-state-icon"><ServerCrash size={22}/></div>
-        <div className="eyebrow">Connection issue</div>
-        <h1>Admin data could not be loaded.</h1>
-        <p>The request failed without a confirmed access response. Please retry; no report contents are exposed here.</p>
-        <button className="btn btn-primary" onClick={retry} data-testid="button-admin-retry"><RotateCw size={15}/> Retry requests</button>
-      </section>
-    </main></Shell>;
-  }
-
-  const stats = [
-    { label: 'Registered users', value: count(overview.data.userCount), note: 'Accounts in VerifAI', icon: <Users size={17}/> },
-    { label: 'Generated reports', value: count(overview.data.reportCount), note: 'All report snapshots', icon: <FileText size={17}/> },
-    { label: 'Free-only reports', value: count(overview.data.freeOnlyReportCount), note: 'Not unlocked', icon: <LockKeyhole size={17}/> },
-    { label: 'Free unlock clicks', value: count(overview.data.unlockClickCount), note: 'Opened the research question', icon: <MousePointerClick size={17}/> },
-    { label: 'Free demo unlocks', value: count(overview.data.demoUnlockCount), note: 'Full access; no payment', icon: <Check size={17}/> },
-    { label: 'Would pay ₹20', value: count(overview.data.payIntentYesCount), note: 'Yes responses', icon: <ArrowUpRight size={17}/> },
-    { label: 'Might pay ₹20', value: count(overview.data.payIntentMaybeCount), note: 'Maybe responses', icon: <ArrowUpRight size={17}/> },
-    { label: 'Would not pay ₹20', value: count(overview.data.payIntentNoCount), note: 'No responses', icon: <ArrowUpRight size={17}/> },
-    { label: 'Skipped price question', value: count(overview.data.payIntentSkipCount), note: 'Chose free unlock without answering', icon: <MousePointerClick size={17}/> },
-    { label: 'Yes share', value: `${overview.data.payIntentYesRate.toLocaleString('en-IN', { maximumFractionDigits: 1 })}%`, note: `${count(overview.data.payIntentAnswerCount)} answered · yes / answered`, icon: <ArrowUpRight size={17}/> },
-    { label: 'Checkout attempts', value: count(overview.data.checkoutAttemptCount), note: 'Actual payment orders created', icon: <MousePointerClick size={17}/> },
-    { label: 'Verified payments', value: count(overview.data.paymentCompletedCount), note: 'Paid status verified by provider', icon: <Check size={17}/> },
-    { label: 'Payment conversion', value: overview.data.paymentConversionRate === null ? '—' : `${overview.data.paymentConversionRate.toLocaleString('en-IN', { maximumFractionDigits: 1 })}%`, note: 'Verified payments / checkout attempts', icon: <ArrowUpRight size={17}/> },
-  ];
-  const currentPage = reports.data.page;
-  const totalPages = reports.data.totalPages;
-
-  return <Shell title="Admin"><main className="page admin-page">
-    <div className="page-header admin-page-header">
-      <div><div className="eyebrow">VerifAI / operations</div><h1>Signal, at a glance.</h1><p className="muted">A server-sourced view of platform activity and generated report metadata.</p></div>
-      <div className="admin-live-mark"><span/> Live API data</div>
-    </div>
-    <section className="admin-metrics" aria-label="Platform metrics">
-      {stats.map((stat, index)=><article className={`admin-metric admin-metric-${index + 1}`} key={stat.label} data-testid={`admin-metric-${index + 1}`}>
-        <div className="admin-metric-top"><span>{stat.label}</span><i>{stat.icon}</i></div>
-        <strong data-testid={`admin-metric-value-${index + 1}`}>{stat.value}</strong>
-        <small>{stat.note}</small>
-      </article>)}
-    </section>
-    <section className="admin-reports-section">
-      <div className="admin-reports-heading">
-        <div><div className="eyebrow">Report index</div><h2>Generated reports</h2><p className="muted">Metadata only. Report contents are not available in this view.</p></div>
-        <div className="admin-total" data-testid="admin-report-total"><span>Records</span><strong>{count(reports.data.total)}</strong></div>
-      </div>
-      {reports.data.items.length === 0 ? <div className="admin-empty" data-testid="admin-reports-empty">
-        <div className="admin-state-icon"><FileText size={20}/></div><h3>No generated reports yet.</h3><p>When a report is generated, its metadata will appear here.</p>
-      </div> : <>
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead><tr><th>Idea</th><th>Owner</th><th>Signal</th><th>Generated</th><th>Access</th><th><span className="sr-only">Details</span></th></tr></thead>
-            <tbody>{reports.data.items.map((report)=><tr key={report.id} data-testid={`admin-report-row-${report.id}`}>
-              <td><div className="report-idea-cell"><strong data-testid={`admin-report-idea-${report.id}`}>{report.ideaName}</strong><span>Idea {report.ideaId}</span></div></td>
-              <td><span className="report-owner" data-testid={`admin-report-owner-${report.id}`}>{report.ownerId}</span></td>
-              <td><div className="report-signal"><strong data-testid={`admin-report-score-${report.id}`}>{report.score}<small>/100</small></strong><span data-testid={`admin-report-verdict-${report.id}`}>{report.verdict}</span></div></td>
-              <td><time dateTime={report.generatedAt} data-testid={`admin-report-generated-${report.id}`}>{dateTime(report.generatedAt)}</time></td>
-              <td><span className={`report-access ${report.isFullReport ? 'unlocked' : 'free'}`} data-testid={`admin-report-access-${report.id}`}><i/>{report.isFullReport || report.unlockedAt ? 'Unlocked' : 'Free preview'}</span></td>
-              <td><button className="admin-inspect-button" onClick={()=>setSelectedReportId(report.id)} data-testid={`button-admin-open-report-${report.id}`}>Inspect <ArrowUpRight size={13}/></button></td>
-            </tr>)}</tbody>
-          </table>
-        </div>
-        <div className="admin-mobile-report-list">
-          {reports.data.items.map((report)=><article className="admin-report-card" key={report.id} data-testid={`admin-report-card-${report.id}`}>
-            <div className="admin-card-top"><strong data-testid={`admin-report-idea-mobile-${report.id}`}>{report.ideaName}</strong><span className={`report-access ${report.isFullReport ? 'unlocked' : 'free'}`} data-testid={`admin-report-access-mobile-${report.id}`}>{report.isFullReport || report.unlockedAt ? 'Unlocked' : 'Free preview'}</span></div>
-            <div className="admin-card-score"><strong>{report.score}<small>/100</small></strong><span data-testid={`admin-report-verdict-mobile-${report.id}`}>{report.verdict}</span></div>
-            <div className="admin-card-meta"><span>Owner <b data-testid={`admin-report-owner-mobile-${report.id}`}>{report.ownerId}</b></span><time dateTime={report.generatedAt} data-testid={`admin-report-generated-mobile-${report.id}`}>{dateTime(report.generatedAt)}</time></div>
-            <button className="admin-inspect-button admin-inspect-mobile" onClick={()=>setSelectedReportId(report.id)} data-testid={`button-admin-open-report-mobile-${report.id}`}>Inspect report <ArrowUpRight size={13}/></button>
-          </article>)}
-        </div>
-        <nav className="admin-pagination" aria-label="Report pages" data-testid="admin-pagination">
-          <span data-testid="admin-page-summary">Page {currentPage} of {totalPages} <i/> {count(reports.data.total)} reports</span>
-          <div>
-            <button className="btn btn-outline" onClick={()=>setPage((value)=>Math.max(1,value-1))} disabled={currentPage <= 1} data-testid="button-admin-previous"><ArrowLeft size={14}/> Previous</button>
-            <button className="btn btn-outline" onClick={()=>setPage((value)=>Math.min(totalPages,value+1))} disabled={currentPage >= totalPages} data-testid="button-admin-next">Next <ArrowRight size={14}/></button>
-          </div>
-        </nav>
-      </>}
-    </section>
-    {selectedReportId && <section className="admin-detail-panel" aria-live="polite" data-testid="admin-report-detail">
-      <div className="admin-detail-head">
-        <div><div className="eyebrow">Report detail / server response</div><h2>{detail.data?.id === selectedReportId ? detail.data.ideaName : 'Opening report detail'}</h2></div>
-        <button className="admin-close-detail" onClick={()=>setSelectedReportId(null)} aria-label="Close report detail" data-testid="button-admin-close-report"><X size={17}/></button>
-      </div>
-      {detail.isLoading && <div className="admin-detail-loading" role="status" data-testid="status-admin-report-loading"><div className="skeleton" style={{height:80}}/><div className="skeleton" style={{height:210}}/></div>}
-      {detail.isError && (() => {
-        const detailStatus = statusOf(detail.error);
-        const accessDenied = detailStatus === 401 || detailStatus === 403;
-        const unavailable = detailStatus === 503;
-        const stateId = detailStatus === 401 ? 'status-admin-report-unauthorized' : detailStatus === 403 ? 'status-admin-report-forbidden' : unavailable ? 'status-admin-report-unavailable' : 'status-admin-report-error';
-        return <div className="admin-detail-error" role="alert" data-testid={stateId}>
-          <strong>{accessDenied ? 'The server did not grant access to this report.' : unavailable ? 'Report detail is temporarily unavailable.' : 'Report detail could not be loaded.'}</strong>
-          <p>{accessDenied ? 'No report contents are shown.' : 'Retry the request when the service is ready.'}</p>
-          <button className="btn btn-outline" onClick={()=>void detail.refetch()} data-testid="button-admin-report-retry"><RotateCw size={14}/> Retry detail</button>
-        </div>;
-      })()}
-      {detail.data && detail.data.id === selectedReportId && !detail.isError && <>
-        <div className="admin-detail-overview">
-          <div className="admin-detail-score"><strong data-testid="admin-detail-score">{detail.data.score}<small>/100</small></strong><span data-testid="admin-detail-verdict">{detail.data.verdict}</span></div>
-          <dl>
-            <div><dt>Owner</dt><dd data-testid="admin-detail-owner">{detail.data.ownerId}</dd></div>
-            <div><dt>Idea ID</dt><dd data-testid="admin-detail-idea-id">{detail.data.ideaId}</dd></div>
-            <div><dt>Generated</dt><dd><time dateTime={detail.data.generatedAt} data-testid="admin-detail-generated">{dateTime(detail.data.generatedAt)}</time></dd></div>
-            <div><dt>Access</dt><dd data-testid="admin-detail-access">{detail.data.isFullReport || detail.data.unlockedAt ? 'Unlocked' : 'Free preview'}</dd></div>
-          </dl>
-        </div>
-        {detail.data.headlineSnapshot
-          ? <SnapshotReadout snapshot={detail.data.headlineSnapshot} prefix="admin"/>
-          : <div className="legacy-report-note" data-testid="admin-legacy-snapshot">Legacy report: no headline snapshot was stored for this record.</div>}
-        {detail.data.paidDetails
-          ? <PaidDetailsReadout details={detail.data.paidDetails} history={detail.data.scoreHistory ?? []}/>
-          : <div className="legacy-report-note" data-testid="admin-legacy-paid-details">{detail.data.isFullReport ? 'Legacy report: detailed analysis is not available for this record.' : 'No paid details are stored for this report.'}</div>}
-        <section className="admin-detail-summary">
-          <div className="eyebrow">Executive summary</div>
-          <p data-testid="admin-detail-summary-text">{detail.data.summary}</p>
-        </section>
-        <section className="admin-detail-subsection">
-          <div className="admin-detail-subheading"><div><div className="eyebrow">Assessment</div><h3>Six lenses, one picture.</h3></div><span data-testid="admin-detail-section-count">{detail.data.sections.length} sections</span></div>
-          <div className="admin-detail-sections">
-            {detail.data.sections.map((section)=><article className="admin-detail-section" key={section.key} data-testid={`admin-detail-section-${section.key}`}>
-              <div className="admin-detail-section-top"><div><span>{section.key.replaceAll('_',' ')}</span><h4>{section.title}</h4></div><strong>{section.score}<small>/100</small></strong></div>
-              <p>{section.summary}</p>
-              {section.strengths.length > 0 && <div className="detail-list-block"><h5>Strengths</h5><ul>{section.strengths.map((item,index)=><li key={`${index}-${item}`}>{item}</li>)}</ul></div>}
-              {section.improvements.length > 0 && <div className="detail-list-block"><h5>Open questions</h5><ul>{section.improvements.map((item,index)=><li key={`${index}-${item}`}>{item}</li>)}</ul></div>}
-              {section.evidence.length > 0 && <div className="detail-list-block"><h5>Evidence</h5><ul>{section.evidence.map((item,index)=><li key={`${index}-${item}`}>{item}</li>)}</ul></div>}
-            </article>)}
-          </div>
-        </section>
-        <div className="admin-detail-lists">
-          <section className="admin-detail-list" data-testid="admin-detail-comparisons"><div className="eyebrow">Context</div><h3>Comparisons</h3>{detail.data.comparisons.length ? <ul>{detail.data.comparisons.map((item,index)=><li key={`${index}-${item}`}>{item}</li>)}</ul> : <p className="muted">No comparisons were included.</p>}</section>
-          <section className="admin-detail-list" data-testid="admin-detail-next-steps"><div className="eyebrow">Forward motion</div><h3>Next steps</h3>{detail.data.nextSteps.length ? <ol>{detail.data.nextSteps.map((item,index)=><li key={`${index}-${item}`}>{item}</li>)}</ol> : <p className="muted">No next steps were included.</p>}</section>
-        </div>
-      </>}
-    </section>}
-  </main></Shell>;
 }
 
 const analysisUpdates = [
@@ -526,22 +252,6 @@ function Dashboard() {
   </main></Shell>;
 }
 
-const ANSWER_PLACEHOLDERS: Record<string,string> = {
-  customer: 'e.g. Priya, a 2nd-year engineering student living in a PG in Pune. She eats out 4–5 times a week and is tired of oily food and delivery fees.',
-  workaround: 'e.g. She orders from Swiggy/Zomato or skips meals. It costs ₹150–250 per meal, delivery is slow at peak hours, and the food is not homely.',
-  evidence: 'e.g. I spoke to 15 students in my hostel — 11 said they spend over ₹4,000 a month on food, and 6 already pay an aunty nearby for lunch.',
-  first_outcome: 'e.g. A weekly lunch subscription from 3 home cooks to 30 students in one area, ordered and paid through WhatsApp.',
-  payer: 'e.g. Students pay, sometimes parents top up. They spend ₹4–6k/month on food today; a ₹1,800/month lunch plan would save them money.',
-  alternatives: 'e.g. Swiggy/Zomato, college mess, local tiffin services, cooking themselves, or asking a PG cook for extra portions.',
-  first_channel: 'e.g. Hostel WhatsApp groups, PG owners, college fest stalls, and Instagram pages for student communities in Pune.',
-  starting_segment: 'e.g. Students within 2 km of MIT and COEP in Pune — about 5,000 students living away from home.',
-  traction: 'e.g. Ran a 2-week pilot with 12 students; 9 paid for a second week and 2 referred friends.',
-  technical_dependency: 'e.g. Reliable WhatsApp ordering and UPI payment reconciliation; I’m not sure how to automate the daily order list for cooks.',
-  compliance: 'e.g. Yes — we collect UPI payments and phone numbers, and cooks may need FSSAI registration for selling food.',
-  riskiest_assumption: 'e.g. That students will commit to a weekly plan instead of ordering meal by meal.',
-};
-const answerPlaceholder = (questionId?: string) => (questionId && ANSWER_PLACEHOLDERS[questionId]) || 'e.g. Share what you know in a few lines — rough numbers, names, or examples help. If you don’t know yet, tap “Not sure yet”.';
-
 function NewIdea() {
   const createIdea = useCreateVerifaiIdea();
   const queryClient = useQueryClient();
@@ -561,11 +271,11 @@ function NewIdea() {
     <div className="page-header"><div><div className="eyebrow">Start with what you know</div><h1>Put the idea on paper.</h1><p className="muted">A working description is enough. You can refine it as you learn.</p></div><Link href="/dashboard" className="btn btn-outline" data-testid="link-cancel-idea"><ArrowLeft size={15}/> Workspace</Link></div>
     <form className="panel" onSubmit={submit}>
       <div className="form-grid">
-        <div className="field form-wide"><label htmlFor="idea-name">What are you calling it for now?</label><input id="idea-name" data-testid="input-idea-name" value={values.name} maxLength={120} onChange={(e)=>update('name',e.target.value)} placeholder="e.g. ChaiDrop, or just “tiffin app for students”" required minLength={3}/></div>
-        <div className="field form-wide"><label htmlFor="idea-description">Describe the idea in plain language</label><textarea id="idea-description" data-testid="input-idea-description" value={values.description} maxLength={6000} onChange={(e)=>update('description',e.target.value)} placeholder={"e.g. A WhatsApp-based ordering service that lets home cooks in Pune sell daily tiffins to nearby college students. Students subscribe weekly, cooks get a predictable order list each morning, and we handle payments and delivery slots."} required minLength={20}/><span className="muted">{values.description.length}/6000 · At least 20 characters</span></div>
-        <div className="field"><label htmlFor="idea-problem">What problem have you noticed?</label><textarea id="idea-problem" data-testid="input-idea-problem" value={values.problem} maxLength={2000} onChange={(e)=>update('problem',e.target.value)} placeholder={"e.g. Students living in PGs skip proper meals because mess food is poor and delivery apps cost ₹150+ per meal. Home cooks nearby have capacity but no easy way to find steady customers."}/></div>
-        <div className="field"><label htmlFor="idea-customer">Who experiences it?</label><textarea id="idea-customer" data-testid="input-target-customer" value={values.targetCustomer} maxLength={1000} onChange={(e)=>update('targetCustomer',e.target.value)} placeholder={"e.g. 18–24 year-old students in PGs and hostels near campus, spending ₹3–5k a month on food. Not sure yet is fine too."}/></div>
-        <div className="field"><label htmlFor="idea-market">Where will you start?</label><input id="idea-market" data-testid="input-target-market" value={values.targetMarket} maxLength={120} onChange={(e)=>update('targetMarket',e.target.value)} placeholder="e.g. Pune — Viman Nagar & Kothrud"/></div>
+        <div className="field form-wide"><label htmlFor="idea-name">What are you calling it for now?</label><input id="idea-name" data-testid="input-idea-name" value={values.name} maxLength={120} onChange={(e)=>update('name',e.target.value)} placeholder="A working name is fine" required minLength={3}/></div>
+        <div className="field form-wide"><label htmlFor="idea-description">Describe the idea in plain language</label><textarea id="idea-description" data-testid="input-idea-description" value={values.description} maxLength={6000} onChange={(e)=>update('description',e.target.value)} placeholder="What would it do, and for whom?" required minLength={20}/><span className="muted">{values.description.length}/6000 · At least 20 characters</span></div>
+        <div className="field"><label htmlFor="idea-problem">What problem have you noticed?</label><textarea id="idea-problem" data-testid="input-idea-problem" value={values.problem} maxLength={2000} onChange={(e)=>update('problem',e.target.value)} placeholder="A specific moment of friction is useful."/></div>
+        <div className="field"><label htmlFor="idea-customer">Who experiences it?</label><textarea id="idea-customer" data-testid="input-target-customer" value={values.targetCustomer} maxLength={1000} onChange={(e)=>update('targetCustomer',e.target.value)} placeholder="You can say “not sure yet”."/></div>
+        <div className="field"><label htmlFor="idea-market">Where will you start?</label><input id="idea-market" data-testid="input-target-market" value={values.targetMarket} maxLength={120} onChange={(e)=>update('targetMarket',e.target.value)} placeholder="India, a city, or a community"/></div>
         <div className="field"><label htmlFor="idea-stage">Current stage</label><select id="idea-stage" data-testid="select-stage" defaultValue="idea" disabled><option value="idea">Early idea · default</option></select><span className="muted">We begin at idea stage; evidence will refine this picture.</span></div>
       </div>
       {formError && <div className="error-box" role="alert" style={{margin:'10px 0 18px'}}>{formError}</div>}
@@ -620,7 +330,7 @@ function Questions() {
         <div className="question-count">Question {position+1} of {questions.length} · {current?.tierTitle}</div>
         <div className="progress-track"><div className="progress-fill" style={{width:`${questions.length ? ((position+1)/questions.length)*100 : 0}%`}}/></div>
         <h2>{current?.prompt}</h2><p className="question-rationale">{current?.rationale}</p>
-        <textarea className="answer-input" data-testid="input-question-answer" value={answers[current?.id]??''} onChange={(e)=>setAnswers((prev)=>({...prev,[current.id]:e.target.value}))} placeholder={answerPlaceholder(current?.id)} maxLength={3000} />
+        <textarea className="answer-input" data-testid="input-question-answer" value={answers[current?.id]??''} onChange={(e)=>setAnswers((prev)=>({...prev,[current.id]:e.target.value}))} placeholder="Write what you know, or leave it blank and mark it as not sure yet." maxLength={3000} />
         <div className="answer-actions"><div style={{display:'flex',gap:8}}><button className="btn btn-outline" onClick={()=>setAnswers((prev)=>({...prev,[current.id]:'Not sure yet'}))} data-testid="button-not-sure">Not sure yet</button><button className="btn btn-outline" disabled={position===0} onClick={()=>setPosition((p)=>Math.max(0,p-1))} data-testid="button-previous"><ArrowLeft size={14}/> Back</button></div>
           {position<questions.length-1 ? <button className="btn btn-primary" onClick={()=>setPosition((p)=>p+1)} data-testid="button-next-question">Next <ArrowRight size={14}/></button> : <button className="btn btn-primary" onClick={finish} disabled={save.isPending||run.isPending} data-testid="button-submit-answers">{save.isPending||run.isPending?'Building your snapshot…':'Save & create snapshot'} <ArrowRight size={14}/></button>}
         </div>
@@ -638,27 +348,17 @@ function Report({finalView=false}:{finalView?:boolean}) {
   const idea=useGetVerifaiIdea(ideaId,{query:{enabled:!!ideaId,queryKey:getGetVerifaiIdeaQueryKey(ideaId)}});
   const run=useRunVerifaiAnalysis();
   const demoUnlock=useDemoUnlockVerifaiReport();
-  const trackUnlockClick=useTrackVerifaiUnlockClick();
   const queryClient=useQueryClient();
   const [,setLocation]=useLocation();
   const [demoError,setDemoError]=useState('');
-  const [intentDialogOpen,setIntentDialogOpen]=useState(false);
-  const [clickTrackingError,setClickTrackingError]=useState('');
   const generate=()=>run.mutate({ideaId},{onSuccess:()=>{void queryClient.invalidateQueries({queryKey:getGetVerifaiReportQueryKey(ideaId)});void queryClient.invalidateQueries({queryKey:getGetVerifaiDashboardQueryKey()});}});
-  const openResearchUnlock=()=>{
+  const unlockForDemo=()=>{
     setDemoError('');
-    setClickTrackingError('');
-    setIntentDialogOpen(true);
-    trackUnlockClick.mutate({ideaId},{onError:()=>setClickTrackingError('We could not record this click, but you can still unlock the free research preview.')});
-  };
-  const unlockForDemo=(willingnessToPay:'yes'|'maybe'|'no'|'skip')=>{
-    setDemoError('');
-    demoUnlock.mutate({ideaId,data:{willingnessToPay}},{onSuccess:async()=>{
+    demoUnlock.mutate({ideaId},{onSuccess:async()=>{
       await Promise.all([
         queryClient.invalidateQueries({queryKey:getGetVerifaiReportQueryKey(ideaId)}),
         queryClient.invalidateQueries({queryKey:getGetVerifaiIdeaQueryKey(ideaId)}),
       ]);
-      setIntentDialogOpen(false);
       setLocation(`/ideas/${ideaId}/final`);
     },onError:()=>setDemoError('The demo unlock did not go through. Your snapshot is unchanged; try once more.')});
   };
@@ -671,51 +371,26 @@ function Report({finalView=false}:{finalView?:boolean}) {
   const nextSteps=data.nextSteps??[];
   if(finalView&&!data.isFullReport) return <Shell title="Final results"><main className="page"><div className="empty-state"><div className="empty-symbol"><LockKeyhole size={22}/></div><h3>This report is still in preview mode.</h3><p>Use the demo unlock on the preview screen to open the final results. It will not process a payment.</p><Link href={`/ideas/${ideaId}/report`} className="btn btn-primary" data-testid="link-back-to-preview">Back to report preview</Link></div></main></Shell>;
   return <Shell title={finalView?'Final results':'Report preview'}><main className={`page ${data.isFullReport?'report-page-full':'report-page-preview'}`}>
-     <div className="page-header"><div><div className="eyebrow">{finalView?'FREE RESEARCH UNLOCK · NO PAYMENT TAKEN':`A first look · Generated ${new Date(data.generatedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}`}</div><h1>{finalView?'Your full report':data.ideaName}</h1><p className="muted">{finalView?'The complete idea assessment is ready to explore.':'A quick signal on where the idea stands. Unlock the full read when you are ready.'}</p></div>{finalView?<Link href={`/ideas/${ideaId}/report`} className="btn btn-outline" data-testid="link-back-to-preview"><ArrowLeft size={15}/> Back to preview</Link>:<Link href={`/ideas/${ideaId}/questions`} className="btn btn-outline" data-testid="link-review-answers"><Layers3 size={15}/> Review my answers</Link>}</div>
-     {finalView&&<div className="notice" role="status" data-testid="status-demo-unlocked"><strong>Research preview.</strong> Full access is free for this test. No payment was taken.</div>}
+    <div className="page-header"><div><div className="eyebrow">{finalView?'DEMO UNLOCK · NO PAYMENT TAKEN':`A first look · Generated ${new Date(data.generatedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}`}</div><h1>{finalView?'Your full report':data.ideaName}</h1><p className="muted">{finalView?'The complete idea assessment is ready to explore.':'A quick signal on where the idea stands. Unlock the full read when you are ready.'}</p></div>{finalView?<Link href={`/ideas/${ideaId}/report`} className="btn btn-outline" data-testid="link-back-to-preview"><ArrowLeft size={15}/> Back to preview</Link>:<Link href={`/ideas/${ideaId}/questions`} className="btn btn-outline" data-testid="link-review-answers"><Layers3 size={15}/> Review my answers</Link>}</div>
+    {finalView&&<div className="notice" role="status" data-testid="status-demo-unlocked"><strong>Prototype mode.</strong> Full access is enabled for testing. No payment was taken.</div>}
     <section className="report-score" style={{['--score' as any]:`${score*3.6}deg`}} data-testid="report-score">
       <div className="score-ring"><div className="score-inner"><div className="score-number">{score}</div><div className="score-denom">OUT OF 100</div></div></div>
-      <div><div className="verdict">{data.verdict}</div>{data.isFullReport&&<h2>{data.summary || 'A starting point for a better-informed next step.'}</h2>}<p>A directional signal based on what you shared — not a prediction of success.</p></div>
+      <div><div className="verdict">{data.verdict}</div><h2>{data.summary || 'A starting point for a better-informed next step.'}</h2><p>A directional signal based on what you shared — not a prediction of success.</p></div>
     </section>
-    {!data.headlineSnapshot&&<div className="legacy-report-note" data-testid="legacy-snapshot-notice">
-      <div><strong>This report predates the headline snapshot.</strong><span>There are no saved market or audience metrics to show. Regenerate to build a fresh snapshot from your current inputs.</span></div>
-      <button className="btn btn-outline" onClick={generate} disabled={run.isPending} data-testid="button-regenerate-snapshot"><RotateCw size={14}/>{run.isPending?'Refreshing snapshot…':'Regenerate snapshot'}</button>
-    </div>}
-    {!data.headlineSnapshot&&run.isError&&<div className="error-box" role="alert" data-testid="error-regenerate-snapshot"><span>The snapshot could not be regenerated. Your existing report is unchanged.</span><button className="btn btn-outline" onClick={generate}>Try again</button></div>}
-    {!data.isFullReport&&data.headlineSnapshot&&<SnapshotReadout snapshot={data.headlineSnapshot}/>}
     {!data.isFullReport&&<section className="unlock-offer" data-testid="section-unlock-offer">
       <div className="unlock-offer-heading"><div className="eyebrow">THE FULL PICTURE</div><h2>Ready for the useful details?</h2><p>One unlock opens the complete report and AI founder coach for this idea.</p></div>
       <div className="unlock-benefit-grid">
-        <article className="unlock-benefit"><span>01 / SIX EXPERT LENSES</span><h3>See what is strong — and what needs proof.</h3><p>Market, customer & business model, technology, go-to-market, strategic risk, and India compliance.</p></article>
+        <article className="unlock-benefit"><span>01 / SIX EXPERT LENSES</span><h3>See what is strong — and what needs proof.</h3><p>Market, customer, business model, technology, go-to-market, and India compliance.</p></article>
         <article className="unlock-benefit"><span>02 / EVIDENCE & TRADE-OFFS</span><h3>Get the reasoning behind the score.</h3><p>Strengths, gaps, cited evidence, assumptions, and comparisons with current workarounds.</p></article>
         <article className="unlock-benefit"><span>03 / YOUR NEXT MOVE</span><h3>Leave with a sharper plan.</h3><p>AI framing and execution suggestions, prioritized experiments, and founder-coach chat.</p></article>
       </div>
       <div className="unlock-action">
-        <div><strong>Full report · ₹20 test price</strong><p>Unlock free in this research preview. No payment is collected.</p></div>
-        <button className="btn btn-primary" onClick={openResearchUnlock} disabled={demoUnlock.isPending} data-testid="button-demo-unlock">{demoUnlock.isPending?'Opening your report…':'Try the full report free'} <ArrowRight size={16}/></button>
+        <div><strong>Prototype unlock · ₹20 planned price</strong><p>No charge in this demo. Payment gateway and payment methods will be connected later.</p></div>
+        {import.meta.env.DEV?<button className="btn btn-primary" onClick={unlockForDemo} disabled={demoUnlock.isPending} data-testid="button-demo-unlock">{demoUnlock.isPending?'Opening your report…':'Unlock full report · demo'} <ArrowRight size={16}/></button>:<button className="btn btn-outline" disabled data-testid="button-payment-coming-soon">Payment options coming later</button>}
       </div>
-      {demoError&&!intentDialogOpen&&<div className="error-box" role="alert" data-testid="error-demo-unlock">{demoError}</div>}
+      {demoError&&<div className="error-box" role="alert" data-testid="error-demo-unlock">{demoError}</div>}
     </section>}
-    {intentDialogOpen&&<div className="research-modal-backdrop">
-      <section className="research-modal" role="dialog" aria-modal="true" aria-labelledby="research-modal-title" aria-describedby="research-modal-description">
-        <button className="research-modal-close" type="button" aria-label="Close research question" disabled={demoUnlock.isPending} onClick={()=>setIntentDialogOpen(false)}>×</button>
-        <div className="eyebrow">OPTIONAL · PRODUCT RESEARCH</div>
-        <h2 id="research-modal-title">Would you pay ₹20 for the full report?</h2>
-        <p id="research-modal-description">We’ll record your answer for product research. The full report opens free either way, and no payment is taken.</p>
-        {clickTrackingError&&<p className="research-modal-tracking-note" role="status">{clickTrackingError}</p>}
-        <div className="research-intent-options">
-          <button className="btn btn-outline" type="button" onClick={()=>unlockForDemo('yes')} disabled={demoUnlock.isPending} data-testid="button-pay-intent-yes">Yes, at ₹20</button>
-          <button className="btn btn-outline" type="button" onClick={()=>unlockForDemo('maybe')} disabled={demoUnlock.isPending} data-testid="button-pay-intent-maybe">Maybe</button>
-          <button className="btn btn-outline" type="button" onClick={()=>unlockForDemo('no')} disabled={demoUnlock.isPending} data-testid="button-pay-intent-no">No, not at ₹20</button>
-        </div>
-        <button className="research-skip-button" type="button" onClick={()=>unlockForDemo('skip')} disabled={demoUnlock.isPending} data-testid="button-pay-intent-skip">{demoUnlock.isPending?'Opening free report…':'Skip question and unlock free'}</button>
-        {demoError&&<div className="error-box" role="alert" data-testid="error-demo-unlock-dialog">{demoError}</div>}
-      </section>
-    </div>}
     {data.isFullReport&&<>
-      {data.paidDetails
-        ? <PaidDetailsReadout details={data.paidDetails} history={data.scoreHistory ?? []}/>
-        : <div className="legacy-report-note" data-testid="legacy-paid-details-notice"><strong>Detailed analysis is not available for this legacy report.</strong><span>The score, sections, and context below remain available; no missing research has been filled in.</span></div>}
       <section className="snapshot-areas" aria-labelledby="snapshot-areas-title">
         <div className="snapshot-section-heading"><div><div className="question-count">The quick read</div><h2 id="snapshot-areas-title">Six lenses on the idea</h2></div><span className="muted">Directional, not definitive</span></div>
         {sections.length>0?<div className="snapshot-area-grid">{sections.map((section:any)=><article className="snapshot-area" key={section.key} data-testid={`section-report-${section.key}`}><span>{section.title}</span><strong>{section.score}</strong><div className="snapshot-area-track"><i style={{width:`${Math.max(0,Math.min(100,section.score))}%`}}/></div><p>{section.summary}</p></article>)}</div>:<div className="empty-state"><h3>Area detail is not available.</h3><p>The snapshot has a headline score but no section data to display.</p></div>}
@@ -757,7 +432,7 @@ function ChatGate() {
   return <Shell title="Idea refinement"><main className="page">
     <div className="page-header"><div><div className="eyebrow">Post-report refinement</div><h1>{idea.data?.name??'Your idea'}</h1></div><Link href={`/ideas/${ideaId}/report`} className="btn btn-outline" data-testid="link-back-report"><ArrowLeft size={15}/> Back to snapshot</Link></div>
     {idea.isLoading||report.isLoading ? <LoadingPage/> : idea.isError||report.isError ? <ErrorMessage retry={()=>{void idea.refetch();void report.refetch();}} message="This idea or report could not be loaded."/> :
-      !report.data?.isFullReport ? <div className="chat-gate"><div className="empty-symbol"><LockKeyhole size={22}/></div><div className="eyebrow">AI founder coach · full-report feature</div><h1>Unlock the report to keep going.</h1><p className="muted" style={{maxWidth:500,margin:'0 auto 20px'}}>This prototype uses a no-charge demo unlock. Payment checkout will be added later.</p><Link href={`/ideas/${ideaId}/report`} className="btn btn-primary" data-testid="link-return-snapshot">See demo unlock <ArrowLeft size={14}/></Link></div> :
+      !report.data?.isFullReport ? <div className="chat-gate"><div className="empty-symbol"><LockKeyhole size={22}/></div><div className="eyebrow">Assistant chat · full-report feature</div><h1>Unlock your report to refine.</h1><p className="muted" style={{maxWidth:500,margin:'0 auto 20px'}}>The one-time ₹20 unlock opens the full report and the evidence-aware assistant. Payment must be verified by Pine Labs before access changes.</p><Link href={`/ideas/${ideaId}/report`} className="btn btn-primary" data-testid="link-return-snapshot">See unlock options <ArrowLeft size={14}/></Link></div> :
       <div className="chat-panel">
         <div className="notice"><strong>Evidence-first coaching.</strong> The assistant works from your report and answers; it will label assumptions and avoid inventing market or legal facts.</div>
         <div className="chat-thread" aria-live="polite">
@@ -766,7 +441,7 @@ function ChatGate() {
         </div>
         {history.isError&&<ErrorMessage retry={()=>void history.refetch()} message="Chat history could not be loaded."/>}
         <div className="suggested-prompts">{prompts.map((prompt)=><button className="btn btn-outline" key={prompt} onClick={()=>setDraft(prompt)}>{prompt}</button>)}</div>
-        <form className="chat-composer" onSubmit={submit}><textarea value={draft} onChange={(event)=>setDraft(event.target.value)} maxLength={4000} placeholder="e.g. What’s the cheapest way to test demand with 20 customers this month?" aria-label="Message VerifAI" required/><button className="btn btn-primary" type="submit" disabled={!draft.trim()||send.isPending} aria-label="Send message"><Send size={16}/> Send</button></form>
+        <form className="chat-composer" onSubmit={submit}><textarea value={draft} onChange={(event)=>setDraft(event.target.value)} maxLength={4000} placeholder="Ask a focused question about your idea…" aria-label="Message VerifAI" required/><button className="btn btn-primary" type="submit" disabled={!draft.trim()||send.isPending} aria-label="Send message"><Send size={16}/> Send</button></form>
         {error&&<div className="error-box" role="alert">{error}</div>}
       </div>}
   </main></Shell>;
@@ -813,11 +488,9 @@ function Router() {
   return <ErrorBoundary resetKey={location}><Switch>
     <Route path="/"><Show when="signed-in"><Redirect to="/dashboard"/></Show><Show when="signed-out"><Landing/></Show></Route>
     <Route path="/dashboard"><ProtectedPage><Dashboard/></ProtectedPage></Route>
-    <Route path="/admin"><ProtectedPage><AdminDashboard/></ProtectedPage></Route>
     <Route path="/new"><ProtectedPage><NewIdea/></ProtectedPage></Route>
     <Route path="/ideas/:ideaId/questions"><ProtectedPage><Questions/></ProtectedPage></Route>
     <Route path="/ideas/:ideaId/report"><ProtectedPage><Report/></ProtectedPage></Route>
-    <Route path="/ideas/:ideaId/final"><ProtectedPage><Report finalView/></ProtectedPage></Route>
     <Route path="/ideas/:ideaId/chat"><ProtectedPage><ChatGate/></ProtectedPage></Route>
     <Route path="/account"><ProtectedPage><Account/></ProtectedPage></Route>
     <Route path="/sign-in/*?"><SignInPage/></Route>
@@ -877,17 +550,7 @@ function ClerkApp() {
 }
 
 function App() {
-  return <div
-    style={{ minHeight: '100vh' }}
-    onContextMenu={(event) => {
-      const target = event.target;
-      const editable = target instanceof Element
-        && target.closest('input, textarea, select, [contenteditable="true"], [data-allow-context-menu]');
-      if (!editable) event.preventDefault();
-    }}
-  >
-    <WouterRouter base={basePath}><ClerkApp/></WouterRouter>
-  </div>;
+  return <WouterRouter base={basePath}><ClerkApp/></WouterRouter>;
 }
 
 export default App;
