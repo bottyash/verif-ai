@@ -227,6 +227,7 @@ button { cursor: pointer; }
 .field input,.field textarea,.field select,.answer-input { width:100%; background:#f5efe3; border:1px solid #d6cbb9; padding:13px 14px; outline:none; color:#28241e; border-radius:3px; }
 .field input:focus,.field textarea:focus,.field select:focus,.answer-input:focus { border-color:#d85f4c; box-shadow:0 0 0 2px rgba(216,95,76,.13); }
 .field textarea { min-height:120px; resize:vertical; }
+.field input::placeholder,.field textarea::placeholder,.answer-input::placeholder,.chat-composer textarea::placeholder { color:#a39684; opacity:1; font-style:italic; }
 .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 20px; }
 .form-wide { grid-column:1 / -1; }
 .error-box { padding:16px 18px; border:1px solid #d7a69b; background:#f7e4df; color:#8c3e31; font-size:13px; display:flex; justify-content:space-between; align-items:center; gap:15px; }

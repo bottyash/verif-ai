@@ -526,6 +526,22 @@ function Dashboard() {
   </main></Shell>;
 }
 
+const ANSWER_PLACEHOLDERS: Record<string,string> = {
+  customer: 'e.g. Priya, a 2nd-year engineering student living in a PG in Pune. She eats out 4–5 times a week and is tired of oily food and delivery fees.',
+  workaround: 'e.g. She orders from Swiggy/Zomato or skips meals. It costs ₹150–250 per meal, delivery is slow at peak hours, and the food is not homely.',
+  evidence: 'e.g. I spoke to 15 students in my hostel — 11 said they spend over ₹4,000 a month on food, and 6 already pay an aunty nearby for lunch.',
+  first_outcome: 'e.g. A weekly lunch subscription from 3 home cooks to 30 students in one area, ordered and paid through WhatsApp.',
+  payer: 'e.g. Students pay, sometimes parents top up. They spend ₹4–6k/month on food today; a ₹1,800/month lunch plan would save them money.',
+  alternatives: 'e.g. Swiggy/Zomato, college mess, local tiffin services, cooking themselves, or asking a PG cook for extra portions.',
+  first_channel: 'e.g. Hostel WhatsApp groups, PG owners, college fest stalls, and Instagram pages for student communities in Pune.',
+  starting_segment: 'e.g. Students within 2 km of MIT and COEP in Pune — about 5,000 students living away from home.',
+  traction: 'e.g. Ran a 2-week pilot with 12 students; 9 paid for a second week and 2 referred friends.',
+  technical_dependency: 'e.g. Reliable WhatsApp ordering and UPI payment reconciliation; I’m not sure how to automate the daily order list for cooks.',
+  compliance: 'e.g. Yes — we collect UPI payments and phone numbers, and cooks may need FSSAI registration for selling food.',
+  riskiest_assumption: 'e.g. That students will commit to a weekly plan instead of ordering meal by meal.',
+};
+const answerPlaceholder = (questionId?: string) => (questionId && ANSWER_PLACEHOLDERS[questionId]) || 'e.g. Share what you know in a few lines — rough numbers, names, or examples help. If you don’t know yet, tap “Not sure yet”.';
+
 function NewIdea() {
   const createIdea = useCreateVerifaiIdea();
   const queryClient = useQueryClient();
@@ -545,11 +561,11 @@ function NewIdea() {
     <div className="page-header"><div><div className="eyebrow">Start with what you know</div><h1>Put the idea on paper.</h1><p className="muted">A working description is enough. You can refine it as you learn.</p></div><Link href="/dashboard" className="btn btn-outline" data-testid="link-cancel-idea"><ArrowLeft size={15}/> Workspace</Link></div>
     <form className="panel" onSubmit={submit}>
       <div className="form-grid">
-        <div className="field form-wide"><label htmlFor="idea-name">What are you calling it for now?</label><input id="idea-name" data-testid="input-idea-name" value={values.name} maxLength={120} onChange={(e)=>update('name',e.target.value)} placeholder="A working name is fine" required minLength={3}/></div>
-        <div className="field form-wide"><label htmlFor="idea-description">Describe the idea in plain language</label><textarea id="idea-description" data-testid="input-idea-description" value={values.description} maxLength={6000} onChange={(e)=>update('description',e.target.value)} placeholder="What would it do, and for whom?" required minLength={20}/><span className="muted">{values.description.length}/6000 · At least 20 characters</span></div>
-        <div className="field"><label htmlFor="idea-problem">What problem have you noticed?</label><textarea id="idea-problem" data-testid="input-idea-problem" value={values.problem} maxLength={2000} onChange={(e)=>update('problem',e.target.value)} placeholder="A specific moment of friction is useful."/></div>
-        <div className="field"><label htmlFor="idea-customer">Who experiences it?</label><textarea id="idea-customer" data-testid="input-target-customer" value={values.targetCustomer} maxLength={1000} onChange={(e)=>update('targetCustomer',e.target.value)} placeholder="You can say “not sure yet”."/></div>
-        <div className="field"><label htmlFor="idea-market">Where will you start?</label><input id="idea-market" data-testid="input-target-market" value={values.targetMarket} maxLength={120} onChange={(e)=>update('targetMarket',e.target.value)} placeholder="India, a city, or a community"/></div>
+        <div className="field form-wide"><label htmlFor="idea-name">What are you calling it for now?</label><input id="idea-name" data-testid="input-idea-name" value={values.name} maxLength={120} onChange={(e)=>update('name',e.target.value)} placeholder="e.g. ChaiDrop, or just “tiffin app for students”" required minLength={3}/></div>
+        <div className="field form-wide"><label htmlFor="idea-description">Describe the idea in plain language</label><textarea id="idea-description" data-testid="input-idea-description" value={values.description} maxLength={6000} onChange={(e)=>update('description',e.target.value)} placeholder={"e.g. A WhatsApp-based ordering service that lets home cooks in Pune sell daily tiffins to nearby college students. Students subscribe weekly, cooks get a predictable order list each morning, and we handle payments and delivery slots."} required minLength={20}/><span className="muted">{values.description.length}/6000 · At least 20 characters</span></div>
+        <div className="field"><label htmlFor="idea-problem">What problem have you noticed?</label><textarea id="idea-problem" data-testid="input-idea-problem" value={values.problem} maxLength={2000} onChange={(e)=>update('problem',e.target.value)} placeholder={"e.g. Students living in PGs skip proper meals because mess food is poor and delivery apps cost ₹150+ per meal. Home cooks nearby have capacity but no easy way to find steady customers."}/></div>
+        <div className="field"><label htmlFor="idea-customer">Who experiences it?</label><textarea id="idea-customer" data-testid="input-target-customer" value={values.targetCustomer} maxLength={1000} onChange={(e)=>update('targetCustomer',e.target.value)} placeholder={"e.g. 18–24 year-old students in PGs and hostels near campus, spending ₹3–5k a month on food. Not sure yet is fine too."}/></div>
+        <div className="field"><label htmlFor="idea-market">Where will you start?</label><input id="idea-market" data-testid="input-target-market" value={values.targetMarket} maxLength={120} onChange={(e)=>update('targetMarket',e.target.value)} placeholder="e.g. Pune — Viman Nagar & Kothrud"/></div>
         <div className="field"><label htmlFor="idea-stage">Current stage</label><select id="idea-stage" data-testid="select-stage" defaultValue="idea" disabled><option value="idea">Early idea · default</option></select><span className="muted">We begin at idea stage; evidence will refine this picture.</span></div>
       </div>
       {formError && <div className="error-box" role="alert" style={{margin:'10px 0 18px'}}>{formError}</div>}
@@ -604,7 +620,7 @@ function Questions() {
         <div className="question-count">Question {position+1} of {questions.length} · {current?.tierTitle}</div>
         <div className="progress-track"><div className="progress-fill" style={{width:`${questions.length ? ((position+1)/questions.length)*100 : 0}%`}}/></div>
         <h2>{current?.prompt}</h2><p className="question-rationale">{current?.rationale}</p>
-        <textarea className="answer-input" data-testid="input-question-answer" value={answers[current?.id]??''} onChange={(e)=>setAnswers((prev)=>({...prev,[current.id]:e.target.value}))} placeholder="Write what you know, or leave it blank and mark it as not sure yet." maxLength={3000} />
+        <textarea className="answer-input" data-testid="input-question-answer" value={answers[current?.id]??''} onChange={(e)=>setAnswers((prev)=>({...prev,[current.id]:e.target.value}))} placeholder={answerPlaceholder(current?.id)} maxLength={3000} />
         <div className="answer-actions"><div style={{display:'flex',gap:8}}><button className="btn btn-outline" onClick={()=>setAnswers((prev)=>({...prev,[current.id]:'Not sure yet'}))} data-testid="button-not-sure">Not sure yet</button><button className="btn btn-outline" disabled={position===0} onClick={()=>setPosition((p)=>Math.max(0,p-1))} data-testid="button-previous"><ArrowLeft size={14}/> Back</button></div>
           {position<questions.length-1 ? <button className="btn btn-primary" onClick={()=>setPosition((p)=>p+1)} data-testid="button-next-question">Next <ArrowRight size={14}/></button> : <button className="btn btn-primary" onClick={finish} disabled={save.isPending||run.isPending} data-testid="button-submit-answers">{save.isPending||run.isPending?'Building your snapshot…':'Save & create snapshot'} <ArrowRight size={14}/></button>}
         </div>
@@ -750,7 +766,7 @@ function ChatGate() {
         </div>
         {history.isError&&<ErrorMessage retry={()=>void history.refetch()} message="Chat history could not be loaded."/>}
         <div className="suggested-prompts">{prompts.map((prompt)=><button className="btn btn-outline" key={prompt} onClick={()=>setDraft(prompt)}>{prompt}</button>)}</div>
-        <form className="chat-composer" onSubmit={submit}><textarea value={draft} onChange={(event)=>setDraft(event.target.value)} maxLength={4000} placeholder="Ask a focused question about your idea…" aria-label="Message VerifAI" required/><button className="btn btn-primary" type="submit" disabled={!draft.trim()||send.isPending} aria-label="Send message"><Send size={16}/> Send</button></form>
+        <form className="chat-composer" onSubmit={submit}><textarea value={draft} onChange={(event)=>setDraft(event.target.value)} maxLength={4000} placeholder="e.g. What’s the cheapest way to test demand with 20 customers this month?" aria-label="Message VerifAI" required/><button className="btn btn-primary" type="submit" disabled={!draft.trim()||send.isPending} aria-label="Send message"><Send size={16}/> Send</button></form>
         {error&&<div className="error-box" role="alert">{error}</div>}
       </div>}
   </main></Shell>;
