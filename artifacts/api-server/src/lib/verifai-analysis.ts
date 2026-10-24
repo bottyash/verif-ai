@@ -14,8 +14,8 @@ const agentOutputSchema = z.object({
 const synthesisSchema = z.object({
   verdict: z.string().min(1),
   summary: z.string().min(1),
-  comparisons: z.array(z.string()).min(2),
-  nextSteps: z.array(z.string()).min(2),
+  comparisons: z.array(z.unknown()).min(2),
+  nextSteps: z.array(z.unknown()).min(2),
 });
 
 const agents = [
@@ -66,6 +66,54 @@ type AgentSection = {
 function extractJson(text: string): unknown {
   const cleaned = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
   return JSON.parse(cleaned) as unknown;
+}
+
+const bulletTextKeys = [
+  "text",
+  "title",
+  "summary",
+  "description",
+  "comparison",
+  "alternative",
+  "status_quo",
+  "statusQuo",
+  "workaround",
+  "tradeoff",
+  "trade_off",
+  "rationale",
+  "action",
+  "recommendation",
+  "next_step",
+  "nextStep",
+  "success_signal",
+  "successSignal",
+  "timeframe",
+] as const;
+
+function collectStrings(value: unknown): string[] {
+  if (typeof value === "string") return value.trim() ? [value.trim()] : [];
+  if (Array.isArray(value)) return value.flatMap(collectStrings);
+  if (value && typeof value === "object") {
+    return Object.entries(value)
+      .filter(([key]) => !["id", "type", "status"].includes(key.toLowerCase()))
+      .flatMap(([, child]) => collectStrings(child));
+  }
+  return [];
+}
+
+function formatReportBullets(items: unknown[], field: string): string[] {
+  return items.map((item, index) => {
+    if (typeof item === "string" && item.trim()) return item.trim();
+
+    if (item && typeof item === "object" && !Array.isArray(item)) {
+      const record = item as Record<string, unknown>;
+      const preferred = bulletTextKeys.flatMap((key) => collectStrings(record[key]));
+      const parts = [...new Set(preferred.length ? preferred : collectStrings(record))];
+      if (parts.length > 0) return parts.join(" — ");
+    }
+
+    throw new Error(`The VC synthesis returned an invalid ${field} item at position ${index + 1}.`);
+  });
 }
 
 export function ideaContext(idea: IdeaRecord): string {
@@ -167,7 +215,7 @@ export async function analyzeStartupIdea(idea: IdeaRecord) {
     verdict: final.verdict,
     summary: final.summary,
     sections,
-    comparisons: final.comparisons,
-    nextSteps: final.nextSteps,
+    comparisons: formatReportBullets(final.comparisons, "comparison"),
+    nextSteps: formatReportBullets(final.nextSteps, "next-step"),
   };
 }
