@@ -1,2 +1,3 @@
 - [Workspace template installs](pnpm-template-installs.md) — copied workspace libraries may need a full root install before their dependencies resolve.
 - [AgenticOrg API authorization](agenticorg-api-authorization.md) — metadata-read failures are inconclusive for run-scoped keys; validate the direct UUID run route when approved.
+- [VerifAI refinement meaning](verifai-refinement-semantics.md) — refinement should be AI-generated framing and execution guidance, not a request for founders to rewrite their answers.

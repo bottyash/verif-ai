@@ -185,7 +185,7 @@ export async function analyzeStartupIdea(idea: IdeaRecord) {
       {
         role: "system",
         content:
-          "You are the VC-orchestrator for an Indian founder's idea validation report. Return only JSON with verdict, summary, comparisons (at least 2), and nextSteps (at least 2). Synthesize the analyst findings without inventing external evidence. State that this is an early directional assessment, not investment, legal, or financial advice. Make the comparisons explain the strengths and trade-offs versus the status quo/workarounds, not fabricate named companies.",
+          "You are the VC-orchestrator for an Indian founder's idea validation report. Return only JSON with verdict, summary, comparisons (at least 2), and nextSteps (exactly 3). Synthesize the analyst findings without inventing external evidence. State that this is an early directional assessment, not investment, legal, or financial advice. Make the comparisons explain the strengths and trade-offs versus the status quo/workarounds, not fabricate named companies. The three nextSteps are AI-generated idea refinement suggestions, not requests for the founder to edit answers: provide one sharper positioning/framing suggestion prefixed 'FRAME:', one concrete execution experiment prefixed 'TEST:', and one product/idea refinement suggestion prefixed 'SHARPEN:'. Ground each in the supplied idea or analyst findings, state assumptions as assumptions, and make the experiment small enough to run in roughly two weeks.",
       },
       {
         role: "user",

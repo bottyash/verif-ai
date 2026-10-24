@@ -189,7 +189,9 @@ function publicReport(report: typeof validationReportsTable.$inferSelect) {
       evidence: full ? section.evidence : [],
     })),
     comparisons: full ? report.comparisons : [],
-    nextSteps: full ? report.nextSteps : [],
+    // Keep three concise AI refinement suggestions on the free first-page
+    // snapshot; the paid report still receives the complete recommendation set.
+    nextSteps: full ? report.nextSteps : report.nextSteps.slice(0, 3),
     generatedAt: report.generatedAt,
     isFullReport: full,
   };

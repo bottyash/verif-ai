@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import {
   ArrowLeft, ArrowRight, ArrowUpRight, Check, ChevronRight,
   CircleHelp, Compass, FileText, Layers3, Lightbulb, LockKeyhole,
-  MessageCircle, Plus, RotateCw, UserRound, LogOut, Printer, Send,
+  MessageCircle, Plus, RotateCw, UserRound, LogOut, Send,
 } from 'lucide-react';
 import {
   ClerkProvider,
@@ -203,6 +203,28 @@ function LoadingPage() {
   return <div className="page"><div className="skeleton" style={{height:13,width:150,marginBottom:22}}/><div className="skeleton" style={{height:46,width:'50%',marginBottom:18}}/><div className="skeleton" style={{height:90,marginBottom:32}}/><div className="loading-stack">{[1,2,3].map((n)=><div className="skeleton" key={n} style={{height:84}}/>)}</div></div>;
 }
 
+const analysisUpdates = [
+  'Giving the idea a tiny elevator pitch. No elevator music, thankfully.',
+  'Checking who might pay for this before we invite imaginary VCs.',
+  'Looking for a small experiment that beats a very large spreadsheet.',
+  'Stress-testing the plan. The plan has been warned.',
+  'Turning “this could be big” into one useful next move.',
+];
+
+function AnalysisWaiting() {
+  const [messageIndex, setMessageIndex] = useState(0);
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setMessageIndex((current) => (current + 1) % analysisUpdates.length);
+    }, 3200);
+    return () => window.clearInterval(timer);
+  }, []);
+  return <div className="analysis-wait" role="status" aria-live="polite" data-testid="status-analysis-waiting">
+    <div className="analysis-wait-orbit" aria-hidden="true"><Lightbulb size={20}/></div>
+    <div><div className="question-count">A quick idea check</div><p>{analysisUpdates[messageIndex]}</p><span className="muted">Reading your inputs and shaping the first-page snapshot. Nothing is being sent to investors.</span></div>
+  </div>;
+}
+
 function ErrorMessage({ retry, message = 'We could not load this just now.' }: { retry: () => void; message?: string }) {
   return <div className="error-box" role="alert"><span>{message}</span><button className="btn btn-outline" onClick={retry} data-testid="button-retry"><RotateCw size={14}/> Try again</button></div>;
 }
@@ -317,6 +339,7 @@ function Questions() {
           {position<questions.length-1 ? <button className="btn btn-primary" onClick={()=>setPosition((p)=>p+1)} data-testid="button-next-question">Next <ArrowRight size={14}/></button> : <button className="btn btn-primary" onClick={finish} disabled={save.isPending||run.isPending} data-testid="button-submit-answers">{save.isPending||run.isPending?'Building your snapshot…':'Save & create snapshot'} <ArrowRight size={14}/></button>}
         </div>
         <div className="muted" style={{marginTop:16,fontSize:11}}>{answeredCount} of {questions.length} with a response · You can revisit your answers later.</div>
+        {run.isPending && <AnalysisWaiting/>}
         {error && <div className="error-box" style={{marginTop:18}} role="alert"><span>{error}</span><button className="btn btn-outline" onClick={finish} data-testid="button-retry-analysis">Retry</button></div>}
       </section>
     </div>
@@ -347,27 +370,37 @@ function Report() {
     createPayment.mutate({ideaId},{onSuccess:(session)=>window.location.assign(session.checkoutUrl),onError:()=>setCheckoutError('Pine Labs could not start checkout. No payment was taken; try again shortly.')});
   };
   if(report.isLoading) return <Shell title="Validation snapshot"><LoadingPage/></Shell>;
-  if(report.isError || !report.data) return <Shell title="Validation snapshot"><main className="page"><div className="page-header"><div><div className="eyebrow">Validation snapshot</div><h1>{idea.data?.name ?? 'Your idea'}</h1></div></div><div className="empty-state"><div className="empty-symbol"><FileText size={22}/></div><h3>No snapshot to show yet.</h3><p>Complete the question set first, then build a scoped free snapshot based on the information available.</p>{run.isError&&<p role="alert">The analysis could not be generated. Please try again.</p>}<button className="btn btn-primary" onClick={generate} disabled={run.isPending} data-testid="button-run-analysis">{run.isPending?'Reviewing evidence…':'Generate free snapshot'} <ArrowRight size={15}/></button></div></main></Shell>;
+  if(report.isError || !report.data) return <Shell title="Validation snapshot"><main className="page"><div className="page-header"><div><div className="eyebrow">Validation snapshot</div><h1>{idea.data?.name ?? 'Your idea'}</h1></div></div>{run.isPending ? <AnalysisWaiting/> : <div className="empty-state"><div className="empty-symbol"><FileText size={22}/></div><h3>No snapshot to show yet.</h3><p>Complete the question set first, then build a scoped free snapshot based on the information available.</p>{run.isError&&<p role="alert">The analysis could not be generated. Please try again.</p>}<button className="btn btn-primary" onClick={generate} data-testid="button-run-analysis">Generate free snapshot <ArrowRight size={15}/></button></div>}</main></Shell>;
   const data=report.data;
   const score=Math.max(0,Math.min(100,data.score));
   const sections=data.sections??[];
   const comparisons=data.comparisons??[];
   const nextSteps=data.nextSteps??[];
-  return <Shell title="Validation snapshot"><main className="page">
-     <div className="page-header no-print"><div><div className="eyebrow">A scoped read · Generated {new Date(data.generatedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div><h1>{data.ideaName}</h1><p className="muted">Use this as a direction for investigation, not a promise about the outcome.</p></div><div style={{display:'flex',gap:9,flexWrap:'wrap'}}><button className="btn btn-outline" onClick={()=>window.print()} data-testid="button-export-pdf"><Printer size={15}/> Save as PDF</button><Link href={`/ideas/${ideaId}/questions`} className="btn btn-outline" data-testid="link-refine-answers"><Layers3 size={15}/> Refine answers</Link></div></div>
+  return <Shell title="Validation snapshot"><main className={`page ${data.isFullReport?'report-page-full':'report-page-preview'}`}>
+     <div className="page-header"><div><div className="eyebrow">A scoped read · Generated {new Date(data.generatedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div><h1>{data.ideaName}</h1><p className="muted">A first-page snapshot of what looks promising and what to sharpen next.</p></div><Link href={`/ideas/${ideaId}/questions`} className="btn btn-outline" data-testid="link-review-answers"><Layers3 size={15}/> Review my answers</Link></div>
+     {run.isPending && <AnalysisWaiting/>}
      {paymentId&&<div className="notice" role="status"><strong>{paymentStatus.data?.unlocked?'Payment confirmed.':paymentStatus.isError?'We could not verify the payment yet.':paymentStatus.data?.status==='FAILED'||paymentStatus.data?.status==='CANCELLED'?'Payment was not completed.':'Checking Pine Labs payment status…'}</strong> {paymentStatus.data?.unlocked?'The full report is now available.':paymentStatus.isError?'Retry status verification before attempting another payment.':paymentStatus.data?.status==='FAILED'||paymentStatus.data?.status==='CANCELLED'?'You can start checkout again when ready.':''}{paymentStatus.isError&&<button className="inline-link" style={{marginLeft:10}} onClick={()=>void paymentStatus.refetch()}>Retry verification</button>}</div>}
     <section className="report-score" style={{['--score' as any]:`${score*3.6}deg`}} data-testid="report-score">
       <div className="score-ring"><div className="score-inner"><div className="score-number">{score}</div><div className="score-denom">OUT OF 100</div></div></div>
       <div><div className="verdict">{data.verdict}</div><h2>{data.summary || 'A starting point for a better-informed next step.'}</h2><p>This score reflects the details and evidence available in this snapshot. Missing information lowers confidence, not your potential.</p></div>
     </section>
-    {!data.isFullReport && <div className="notice" data-testid="status-free-snapshot"><strong>Free snapshot.</strong> The headline, area scores and summaries below are included. Detailed strengths, improvements, cited evidence and comparisons belong to the full report and are not shown here.</div>}
-    <div className="section-title"><span>Six areas to examine</span><span className="muted">Evidence-aware, not definitive</span></div>
-    <div className="report-grid">{sections.map((section:any)=> <article className="report-section" key={section.key} data-testid={`section-report-${section.key}`}><div className="report-section-top"><h3>{section.title}</h3><span className="section-score">{section.score}/100</span></div><p>{section.summary}</p>{data.isFullReport ? <><div className="report-columns"><div><div className="question-count">Strengths</div><ul>{section.strengths?.map((item:string,index:number)=><li key={index}>{item}</li>)}</ul></div><div><div className="question-count">To improve</div><ul>{section.improvements?.map((item:string,index:number)=><li key={index}>{item}</li>)}</ul></div></div>{section.evidence?.length>0&&<div style={{marginTop:16}}><div className="question-count">Evidence noted</div><ul>{section.evidence.map((item:string,index:number)=><li key={index}>{item}</li>)}</ul></div>}</>:<div className="muted" style={{fontSize:11}}>Section detail is part of the full report.</div>}</article>)}</div>
+    {!data.isFullReport && <div className="notice" data-testid="status-free-snapshot"><strong>First-page preview.</strong> This is a short on-screen snapshot. The detailed report stays behind the full-report unlock; there is no PDF download.</div>}
+    <section className="snapshot-areas" aria-labelledby="snapshot-areas-title">
+      <div className="snapshot-section-heading"><div><div className="question-count">The quick read</div><h2 id="snapshot-areas-title">{data.isFullReport?'Six lenses on the idea':'Six signals, one first page'}</h2></div><span className="muted">Directional, not definitive</span></div>
+      <div className="snapshot-area-grid">{sections.map((section:any)=><article className="snapshot-area" key={section.key} data-testid={`section-report-${section.key}`}><span>{section.title}</span><strong>{section.score}</strong><div className="snapshot-area-track"><i style={{width:`${Math.max(0,Math.min(100,section.score))}%`}}/></div>{data.isFullReport&&<p>{section.summary}</p>}</article>)}</div>
+    </section>
     {sections.length===0 && <div className="empty-state"><h3>Area detail is not available.</h3><p>The snapshot has a headline score but no section data to display.</p></div>}
-    {(data.isFullReport && comparisons.length>0 || nextSteps.length>0) && <div className="report-columns" style={{marginTop:14}}>
-      {data.isFullReport&&comparisons.length>0&&<article className="report-section"><h3>Comparisons & context</h3><ul>{comparisons.map((item:string,i:number)=><li key={i}>{item}</li>)}</ul></article>}
-      {nextSteps.length>0&&<article className="report-section"><h3>Next steps worth testing</h3><ul>{nextSteps.map((item:string,i:number)=><li key={i}>{item}</li>)}</ul></article>}
-    </div>}
+    {nextSteps.length>0&&<section className="ai-refinement" aria-labelledby="ai-refinement-title" data-testid="section-ai-refinement">
+      <div className="snapshot-section-heading"><div><div className="question-count">Your AI idea coach</div><h2 id="ai-refinement-title">Make the idea sharper.</h2><p className="muted">Suggestions for framing, execution, and the idea itself — not homework to rewrite your answers.</p></div><span className="refinement-spark" aria-hidden="true"><Lightbulb size={22}/></span></div>
+      <div className="refinement-grid">{nextSteps.slice(0,data.isFullReport?nextSteps.length:3).map((item:string,index:number)=>{
+        const tag=item.match(/^(?:\[(FRAME|TEST|SHARPEN)\]|(FRAME|TEST|SHARPEN))\s*:?\s*/i);
+        const category=(tag?.[1]??tag?.[2]??['FRAME','TEST','SHARPEN'][index%3]).toUpperCase();
+        const titles:Record<string,string>={FRAME:'Frame it clearly',TEST:'Try it in the real world',SHARPEN:'Sharpen the idea'};
+        const suggestion=tag?item.slice(tag[0].length):item;
+        return <article className="refinement-card" key={`${category}-${index}`} data-testid={`card-refinement-${index}`}><span className="refinement-tag">{category}</span><h3>{titles[category]??'A useful next move'}</h3><p>{suggestion}</p></article>;
+      })}</div>
+    </section>}
+    {data.isFullReport&&sections.length>0&&<section className="full-report-detail" aria-labelledby="full-report-title"><div className="snapshot-section-heading"><div><div className="question-count">Full report</div><h2 id="full-report-title">Evidence behind the snapshot</h2></div></div><div className="report-grid">{sections.map((section:any)=><article className="report-section" key={`detail-${section.key}`}><div className="report-section-top"><h3>{section.title}</h3><span className="section-score">{section.score}/100</span></div><p>{section.summary}</p><div className="report-columns"><div><div className="question-count">Strengths</div><ul>{section.strengths?.map((item:string,index:number)=><li key={index}>{item}</li>)}</ul></div><div><div className="question-count">To improve</div><ul>{section.improvements?.map((item:string,index:number)=><li key={index}>{item}</li>)}</ul></div></div>{section.evidence?.length>0&&<div style={{marginTop:16}}><div className="question-count">Evidence noted</div><ul>{section.evidence.map((item:string,index:number)=><li key={index}>{item}</li>)}</ul></div>}</article>)}</div>{comparisons.length>0&&<article className="report-section report-comparisons"><h3>Comparisons & context</h3><ul>{comparisons.map((item:string,i:number)=><li key={i}>{item}</li>)}</ul></article>}</section>}
      {!data.isFullReport&&<div className="locked-panel no-print"><div><h3>Want to go deeper?</h3><p>Unlock the full evidence breakdown, comparison matrix and founder refinement chat. One-time ₹20 per idea.</p>{!checkout.data?.configured&&<div className="provider-state"><LockKeyhole size={14}/> Pine Labs UAT credentials needed</div>}{checkoutError&&<div className="error-box" role="alert" style={{marginTop:10}}>{checkoutError}</div>}</div><div style={{display:'grid',gap:9,justifyItems:'start'}}><button className="btn btn-primary" onClick={startCheckout} disabled={!checkout.data?.configured||createPayment.isPending||checkout.data?.unlocked} data-testid="button-pinelabs-checkout">{createPayment.isPending?'Preparing secure checkout…':checkout.data?.configured?'Unlock full report · ₹20':'Checkout not connected'} <ArrowRight size={15}/></button><Link href={`/ideas/${ideaId}/chat`} className="btn btn-dark" data-testid="link-chat-gate"><MessageCircle size={15}/> Assistant chat <LockKeyhole size={13}/></Link></div></div>}
      {data.isFullReport&&<div className="locked-panel no-print"><div><h3>Keep refining the idea</h3><p>Talk through a specific assumption and use your full report as the starting point.</p></div><Link href={`/ideas/${ideaId}/chat`} className="btn btn-dark" data-testid="link-chat-gate"><MessageCircle size={15}/> Open assistant chat <ArrowRight size={14}/></Link></div>}
     <p className="muted" style={{fontSize:11,marginTop:15}}>Readiness scores are not investment advice, legal advice, or a prediction of startup success.</p>
