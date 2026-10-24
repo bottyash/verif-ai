@@ -1,0 +1,1 @@
+- [Workspace template installs](pnpm-template-installs.md) — copied workspace libraries may need a full root install before their dependencies resolve.

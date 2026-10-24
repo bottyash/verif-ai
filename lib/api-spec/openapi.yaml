@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: verifai
+    description: Startup idea validation and founder workspace operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,249 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /verifai/dashboard:
+    get:
+      operationId: getVerifaiDashboard
+      tags: [verifai]
+      summary: Get founder dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /verifai/ideas:
+    get:
+      operationId: listVerifaiIdeas
+      tags: [verifai]
+      summary: List the signed-in founder's ideas
+      responses:
+        "200":
+          description: Founder ideas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Idea"
+    post:
+      operationId: createVerifaiIdea
+      tags: [verifai]
+      summary: Create a startup idea for validation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdeaInput"
+      responses:
+        "201":
+          description: Idea created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Idea"
+  /verifai/ideas/{ideaId}:
+    get:
+      operationId: getVerifaiIdea
+      tags: [verifai]
+      summary: Get one idea and its current validation state
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Idea detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Idea"
+        "404":
+          description: Idea not found
+  /verifai/ideas/{ideaId}/questions:
+    post:
+      operationId: generateVerifaiQuestions
+      tags: [verifai]
+      summary: Generate the three-tier idea refinement questionnaire
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ordered question tiers for the idea
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionSet"
+  /verifai/ideas/{ideaId}/answers:
+    put:
+      operationId: saveVerifaiAnswers
+      tags: [verifai]
+      summary: Save founder answers to refinement questions
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdeaAnswersInput"
+      responses:
+        "200":
+          description: Updated idea and answer progress
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Idea"
+  /verifai/ideas/{ideaId}/analysis:
+    post:
+      operationId: runVerifaiAnalysis
+      tags: [verifai]
+      summary: Run the multi-agent startup validation analysis
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Completed validation report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationReport"
+  /verifai/ideas/{ideaId}/report:
+    get:
+      operationId: getVerifaiReport
+      tags: [verifai]
+      summary: Get the latest validation report for an idea
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Validation report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationReport"
+        "404":
+          description: Report not found
+  /verifai/ideas/{ideaId}/checkout-status:
+    get:
+      operationId: getVerifaiCheckoutStatus
+      tags: [verifai]
+      summary: Check whether the Pine Labs unlock is available
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pine Labs configuration and idea unlock status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutStatus"
+  /verifai/ideas/{ideaId}/payments:
+    post:
+      operationId: createVerifaiPayment
+      tags: [verifai]
+      summary: Create a one-time ₹20 Pine Labs payment order
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Checkout session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutSession"
+  /verifai/ideas/{ideaId}/payments/{paymentId}:
+    get:
+      operationId: getVerifaiPaymentStatus
+      tags: [verifai]
+      summary: Verify a Pine Labs payment and unlock the full report
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Verified payment status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentStatus"
+  /verifai/ideas/{ideaId}/messages:
+    get:
+      operationId: getVerifaiMessages
+      tags: [verifai]
+      summary: Get the signed-in founder's persisted idea-chat history
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Chat history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageHistory"
+    post:
+      operationId: sendVerifaiMessage
+      tags: [verifai]
+      summary: Refine an idea with the post-report assistant
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FounderMessageInput"
+      responses:
+        "200":
+          description: Assistant reply and next actions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FounderMessageReply"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +278,216 @@ components:
           type: string
       required:
         - status
+    IdeaInput:
+      type: object
+      required: [name, description]
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 120
+        description:
+          type: string
+          minLength: 20
+          maxLength: 6000
+        problem:
+          type: string
+          maxLength: 2000
+        targetCustomer:
+          type: string
+          maxLength: 1000
+        targetMarket:
+          type: string
+          maxLength: 120
+          default: India
+    Idea:
+      type: object
+      required: [id, name, description, targetMarket, stage, progress, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        problem: { type: ["string", "null"] }
+        targetCustomer: { type: ["string", "null"] }
+        targetMarket: { type: string }
+        stage:
+          type: string
+          enum: [draft, questions, analyzing, report_ready]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        readinessScore:
+          type: ["integer", "null"]
+          minimum: 0
+          maximum: 100
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Question:
+      type: object
+      required: [id, tier, prompt, rationale, required]
+      properties:
+        id: { type: string }
+        tier:
+          type: integer
+          enum: [1, 2, 3]
+        prompt: { type: string }
+        rationale: { type: string }
+        required: { type: boolean }
+        answer: { type: ["string", "null"] }
+    QuestionTier:
+      type: object
+      required: [tier, title, description, questions]
+      properties:
+        tier:
+          type: integer
+          enum: [1, 2, 3]
+        title: { type: string }
+        description: { type: string }
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Question"
+    QuestionSet:
+      type: object
+      required: [ideaId, tiers, answeredCount, totalCount]
+      properties:
+        ideaId: { type: string }
+        tiers:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionTier"
+        answeredCount: { type: integer }
+        totalCount: { type: integer }
+    IdeaAnswer:
+      type: object
+      required: [questionId, answer]
+      properties:
+        questionId: { type: string }
+        answer:
+          type: string
+          maxLength: 3000
+    IdeaAnswersInput:
+      type: object
+      required: [answers]
+      properties:
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/IdeaAnswer"
+    ReportSection:
+      type: object
+      required: [key, title, score, summary, strengths, improvements, evidence]
+      properties:
+        key:
+          type: string
+          enum: [market, technology, customers, go_to_market, risks, legal]
+        title: { type: string }
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        summary: { type: string }
+        strengths:
+          type: array
+          items: { type: string }
+        improvements:
+          type: array
+          items: { type: string }
+        evidence:
+          type: array
+          items: { type: string }
+    ValidationReport:
+      type: object
+      required: [id, ideaId, ideaName, score, verdict, sections, comparisons, generatedAt, isFullReport]
+      properties:
+        id: { type: string }
+        ideaId: { type: string }
+        ideaName: { type: string }
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        verdict: { type: string }
+        summary: { type: string }
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportSection"
+        comparisons:
+          type: array
+          items: { type: string }
+        nextSteps:
+          type: array
+          items: { type: string }
+        generatedAt: { type: string, format: date-time }
+        isFullReport: { type: boolean }
+    FounderMessageInput:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 4000
+    FounderMessageReply:
+      type: object
+      required: [reply, suggestedPrompts]
+      properties:
+        reply: { type: string }
+        suggestedPrompts:
+          type: array
+          items: { type: string }
+    CheckoutStatus:
+      type: object
+      required: [provider, configured, amount, currency, unlocked]
+      properties:
+        provider: { type: string, enum: [pinelabs] }
+        configured: { type: boolean }
+        amount: { type: integer, const: 20 }
+        currency: { type: string, enum: [INR] }
+        unlocked: { type: boolean }
+    CheckoutSession:
+      type: object
+      required: [paymentId, checkoutUrl, status, amount, currency]
+      properties:
+        paymentId: { type: string }
+        checkoutUrl: { type: string, format: uri }
+        status: { type: string }
+        amount: { type: integer, const: 20 }
+        currency: { type: string, enum: [INR] }
+    PaymentStatus:
+      type: object
+      required: [paymentId, status, unlocked]
+      properties:
+        paymentId: { type: string }
+        status:
+          type: string
+          enum: [CREATED, PENDING, PAID, FAILED, CANCELLED]
+        unlocked: { type: boolean }
+    MessageHistory:
+      type: object
+      required: [messages]
+      properties:
+        messages:
+          type: array
+          items:
+            type: object
+            required: [id, role, content, createdAt]
+            properties:
+              id: { type: integer }
+              role: { type: string, enum: [user, assistant] }
+              content: { type: string }
+              createdAt: { type: string, format: date-time }
+    DashboardSummary:
+      type: object
+      required: [ideasCount, reportsCount, averageScore, recentIdeas]
+      properties:
+        ideasCount: { type: integer }
+        reportsCount: { type: integer }
+        averageScore: { type: ["number", "null"] }
+        recentIdeas:
+          type: array
+          items:
+            $ref: "#/components/schemas/Idea"
 
