@@ -41,7 +41,10 @@ import type {
   Idea,
   IdeaAnswersInput,
   IdeaInput,
+  IdeaNeighbors,
   MessageHistory,
+  NeighborsEventInput,
+  NeighborsEventResponse,
   PaymentStatus,
   QuestionSet,
   UnlockClickResponse,
@@ -1490,6 +1493,170 @@ export const useTrackVerifaiUnlockClick = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getTrackVerifaiUnlockClickMutationOptions(options), queryClient);
+    }
+
+export const getGetVerifaiIdeaNeighborsUrl = (ideaId: string,) => {
+
+
+
+
+  return `/api/verifai/ideas/${ideaId}/neighbors`
+}
+
+/**
+ * Paid reports only. Uses the stored idea text, shortlists records from the YC dataset, and returns up to five validated neighbors.
+ * @summary Find Y Combinator companies and requests close to an unlocked idea
+ */
+export const getVerifaiIdeaNeighbors = async (ideaId: string, options?: Parameters<typeof customFetch>[1]): Promise<IdeaNeighbors> => {
+
+  return customFetch<IdeaNeighbors>(getGetVerifaiIdeaNeighborsUrl(ideaId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetVerifaiIdeaNeighborsMutationKey = () => ['getVerifaiIdeaNeighbors'] as const;
+
+export const getGetVerifaiIdeaNeighborsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getVerifaiIdeaNeighbors>>, TError,GetVerifaiIdeaNeighborsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof getVerifaiIdeaNeighbors>>, TError,GetVerifaiIdeaNeighborsMutationVariables, TContext> => {
+
+const mutationKey = getGetVerifaiIdeaNeighborsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getVerifaiIdeaNeighbors>>, GetVerifaiIdeaNeighborsMutationVariables> = (props) => {
+          const {ideaId} = props ?? {};
+
+          return  getVerifaiIdeaNeighbors(ideaId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GetVerifaiIdeaNeighborsMutationResult = NonNullable<Awaited<ReturnType<typeof getVerifaiIdeaNeighbors>>>
+
+    export type GetVerifaiIdeaNeighborsMutationError = ErrorType<void>
+    export type GetVerifaiIdeaNeighborsMutationVariables = {ideaId: string}
+
+    /**
+ * @summary Find Y Combinator companies and requests close to an unlocked idea
+ */
+export const useGetVerifaiIdeaNeighbors = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getVerifaiIdeaNeighbors>>, TError,GetVerifaiIdeaNeighborsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof getVerifaiIdeaNeighbors>>,
+        TError,
+        GetVerifaiIdeaNeighborsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getGetVerifaiIdeaNeighborsMutationOptions(options), queryClient);
+    }
+
+export const getTrackVerifaiNeighborsEventUrl = (ideaId: string,) => {
+
+
+
+
+  return `/api/verifai/ideas/${ideaId}/neighbors/events`
+}
+
+/**
+ * @summary Record an Idea Neighbors view or YC link click
+ */
+export const trackVerifaiNeighborsEvent = async (ideaId: string,
+    neighborsEventInput: NeighborsEventInput, options?: Parameters<typeof customFetch>[1]): Promise<NeighborsEventResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<NeighborsEventResponse>(getTrackVerifaiNeighborsEventUrl(ideaId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(neighborsEventInput)
+  }
+);}
+
+
+
+
+
+export const getTrackVerifaiNeighborsEventMutationKey = () => ['trackVerifaiNeighborsEvent'] as const;
+
+export const getTrackVerifaiNeighborsEventMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trackVerifaiNeighborsEvent>>, TError,TrackVerifaiNeighborsEventMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof trackVerifaiNeighborsEvent>>, TError,TrackVerifaiNeighborsEventMutationVariables, TContext> => {
+
+const mutationKey = getTrackVerifaiNeighborsEventMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trackVerifaiNeighborsEvent>>, TrackVerifaiNeighborsEventMutationVariables> = (props) => {
+          const {ideaId,data} = props ?? {};
+
+          return  trackVerifaiNeighborsEvent(ideaId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TrackVerifaiNeighborsEventMutationResult = NonNullable<Awaited<ReturnType<typeof trackVerifaiNeighborsEvent>>>
+    export type TrackVerifaiNeighborsEventMutationBody = BodyType<NeighborsEventInput>
+    export type TrackVerifaiNeighborsEventMutationError = ErrorType<void>
+    export type TrackVerifaiNeighborsEventMutationVariables = {ideaId: string;data: BodyType<NeighborsEventInput>}
+
+    /**
+ * @summary Record an Idea Neighbors view or YC link click
+ */
+export const useTrackVerifaiNeighborsEvent = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trackVerifaiNeighborsEvent>>, TError,TrackVerifaiNeighborsEventMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof trackVerifaiNeighborsEvent>>,
+        TError,
+        TrackVerifaiNeighborsEventMutationVariables,
+        TContext
+      > => {
+      return useMutation(getTrackVerifaiNeighborsEventMutationOptions(options), queryClient);
     }
 
 export const getDemoUnlockVerifaiReportUrl = (ideaId: string,) => {

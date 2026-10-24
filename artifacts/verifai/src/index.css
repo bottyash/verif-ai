@@ -764,3 +764,52 @@ h1 em,h2 em,.accent-serif { font-family:var(--app-font-accent); font-style:itali
   .snapshot-section-heading { flex-wrap:wrap; }
   .visual-grid { grid-template-columns:minmax(0,1fr); }
 }
+
+/* ---------- Idea Neighbors (paid report) ---------- */
+.idea-neighbors { margin-top:25px; padding:24px; background:#fbf7ee; border:1px solid #ded5c7; }
+.idea-neighbors .snapshot-section-heading h2 em { color:#d85f4c; font-style:italic; }
+.neighbors-mark { display:grid; place-items:center; width:46px; height:46px; flex:none; color:#d85f4c; border:1px solid #e3c9bd; border-radius:50%; background:#f7e9e0; }
+.neighbors-summary { display:inline-flex; align-items:center; gap:9px; margin:0 0 14px; padding:7px 12px; color:#302a24; background:#eee7da; border:1px solid #ded5c7; font:11px/1.4 var(--app-font-mono); letter-spacing:.06em; text-transform:uppercase; }
+.neighbors-summary i { width:7px; height:7px; border-radius:50%; background:#d85f4c; }
+.neighbor-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:10px; }
+.neighbor-card { display:flex; flex-direction:column; gap:10px; min-width:0; padding:17px; background:#fffdf8; border:1px solid #ded5c7; border-top:3px solid #302a24; }
+.neighbor-card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+.neighbor-kind { color:#756e64; font:10px/1.5 var(--app-font-mono); letter-spacing:.12em; text-transform:uppercase; }
+.neighbor-badges { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:4px; }
+.neighbor-badge { padding:2px 7px; color:#5f584f; background:#eee7da; border:1px solid #ded5c7; font:10px/1.5 var(--app-font-mono); white-space:nowrap; }
+.neighbor-badge.status-active, .neighbor-badge.status-public, .neighbor-badge.status-open { color:#3f5f4c; background:#e3ece2; border-color:#c7d6c4; }
+.neighbor-badge.status-acquired { color:#7a5d24; background:#f3e8cf; border-color:#e2cfa4; }
+.neighbor-badge.status-inactive { color:#8c3e31; background:#f7e4df; border-color:#e6c2b9; }
+.neighbor-card h3 { margin:0; font:600 20px/1.15 var(--app-font-serif); letter-spacing:-.025em; color:#28231f; }
+.neighbor-chip { align-self:flex-start; padding:4px 9px; border-radius:999px; font-size:11px; font-weight:600; }
+.neighbor-chip.tone-forest { color:#3f5f4c; background:#e3ece2; }
+.neighbor-chip.tone-ochre { color:#7a5d24; background:#f3e8cf; }
+.neighbor-chip.tone-slate { color:#3d5868; background:#e1e9ed; }
+.neighbor-chip.tone-coral { color:#9a4232; background:#f7e1da; }
+.neighbor-chip.tone-ink { color:#f7f0e3; background:#302a24; }
+.neighbor-points { display:grid; gap:10px; margin:2px 0 0; }
+.neighbor-points dt { color:#d85f4c; font:10px var(--app-font-mono); letter-spacing:.1em; text-transform:uppercase; }
+.neighbor-points dd { margin:4px 0 0; color:#5e574f; font-size:12.5px; line-height:1.6; }
+.neighbor-lesson { padding:9px 11px; background:#f6efe2; border-left:2px solid #c49e56; }
+.neighbor-lesson dt { color:#8a6a2c; }
+.neighbor-source { display:inline-flex; align-items:center; gap:4px; margin-top:auto; padding-top:6px; color:#302a24; font-size:12px; font-weight:600; text-decoration:underline; text-underline-offset:3px; text-decoration-color:#d9cfbf; }
+.neighbor-source:hover { color:#d85f4c; text-decoration-color:currentColor; }
+.neighbor-skeleton { gap:12px; border-top-color:#d9cfbf; }
+.neighbors-loading .muted { margin:0 0 12px; font-size:12px; }
+.neighbors-empty { padding:28px 20px; text-align:center; background:#eee7da; border:1px dashed #c9bda9; }
+.neighbors-empty h3 { margin:0 0 6px; font:600 20px var(--app-font-serif); letter-spacing:-.025em; }
+.neighbors-empty p { max-width:440px; margin:0 auto; color:#777066; font-size:13px; line-height:1.6; }
+.neighbors-note { margin:12px 0 0; color:#8a8175; font-size:11px; }
+
+/* Free-report teaser line inside the unlock offer */
+.neighbors-flash { display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 9px; margin:18px 0 0; padding:11px 14px; color:#e9e1d3; background:rgba(216,95,76,.12); border:1px solid rgba(231,122,100,.45); font-size:13px; line-height:1.55; }
+.neighbors-flash strong { color:#ffb19f; font-weight:600; }
+.neighbors-flash-dot { position:relative; top:-1px; width:8px; height:8px; flex:none; border-radius:50%; background:#e77a64; box-shadow:0 0 0 0 rgba(231,122,100,.6); animation:neighbors-pulse 1.8s ease-out infinite; }
+@keyframes neighbors-pulse { 0% { box-shadow:0 0 0 0 rgba(231,122,100,.6); } 70% { box-shadow:0 0 0 9px rgba(231,122,100,0); } 100% { box-shadow:0 0 0 0 rgba(231,122,100,0); } }
+@media (prefers-reduced-motion: reduce) { .neighbors-flash-dot { animation:none; } }
+@media (max-width:650px) {
+  .idea-neighbors { padding:17px; }
+  .neighbor-grid { grid-template-columns:1fr; }
+  .neighbors-summary { display:flex; }
+}
+@media print { .neighbors-flash { display:none; } }

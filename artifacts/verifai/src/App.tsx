@@ -52,6 +52,7 @@ import {
 import { Brand } from '@/components/brand';
 import { Landing } from '@/components/landing';
 import { LensRadar, PaidDetailsReadout, SnapshotReadout } from '@/components/report-visuals';
+import { IdeaNeighbors } from '@/components/idea-neighbors';
 
 const queryClient = new QueryClient();
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -573,6 +574,7 @@ function Report({finalView=false}:{finalView?:boolean}) {
     {!data.isFullReport&&data.headlineSnapshot&&<SnapshotReadout snapshot={data.headlineSnapshot}/>}
     {!data.isFullReport&&<section className="unlock-offer" data-testid="section-unlock-offer">
       <div className="unlock-offer-heading"><div className="eyebrow">THE FULL PICTURE</div><h2>Ready for the useful details?</h2><p>One unlock opens the complete report and AI founder coach for this idea.</p></div>
+      <p className="neighbors-flash" data-testid="text-neighbors-teaser"><span className="neighbors-flash-dot" aria-hidden="true"/><strong>Who's already near you?</strong> The full report shows the Y Combinator companies and requests closest to your idea, and how to stand apart from them.</p>
       <div className="unlock-benefit-grid">
         <article className="unlock-benefit"><span>01 / SIX EXPERT LENSES</span><h3>See what is strong — and what needs proof.</h3><p>Market, customer & business model, technology, go-to-market, strategic risk, and India compliance.</p></article>
         <article className="unlock-benefit"><span>02 / EVIDENCE & TRADE-OFFS</span><h3>Get the reasoning behind the score.</h3><p>Strengths, gaps, cited evidence, assumptions, and comparisons with current workarounds.</p></article>
@@ -618,6 +620,7 @@ function Report({finalView=false}:{finalView?:boolean}) {
           return <article className="refinement-card" key={`${category}-${index}`} data-testid={`card-refinement-${index}`}><span className="refinement-tag">{category}</span><h3>{titles[category]??'A useful next move'}</h3><p>{suggestion}</p></article>;
         })}</div>
       </section>}
+      <IdeaNeighbors ideaId={ideaId}/>
       {sections.length>0&&<section className="full-report-detail" aria-labelledby="full-report-title"><div className="snapshot-section-heading"><div><div className="question-count">Full report</div><h2 id="full-report-title">Evidence behind the snapshot</h2></div></div><div className="report-grid">{sections.map((section:any)=><article className="report-section" key={`detail-${section.key}`}><div className="report-section-top"><h3>{section.title}</h3><span className="section-score">{section.score}/100</span></div><p>{section.summary}</p><details className="evidence-details"><summary>Strengths, gaps and evidence</summary><div className="report-columns"><div><div className="question-count">Strengths</div><ul>{section.strengths?.map((item:string,index:number)=><li key={index}>{item}</li>)}</ul></div><div><div className="question-count">To improve</div><ul>{section.improvements?.map((item:string,index:number)=><li key={index}>{item}</li>)}</ul></div></div>{section.evidence?.length>0&&<div style={{marginTop:16}}><div className="question-count">Evidence noted</div><ul>{section.evidence.map((item:string,index:number)=><li key={index}>{item}</li>)}</ul></div>}</details></article>)}</div>{comparisons.length>0&&<article className="report-section report-comparisons"><h3>Comparisons & context</h3><ul>{comparisons.map((item:string,i:number)=><li key={i}>{item}</li>)}</ul></article>}</section>}
       <div className="locked-panel"><div><h3>Keep moving</h3><p>Ask the AI coach to turn one report finding into a concrete test.</p></div><Link href={`/ideas/${ideaId}/chat`} className="btn btn-dark" data-testid="link-chat-gate"><MessageCircle size={15}/> Open AI founder coach <ArrowRight size={14}/></Link></div>
     </>}

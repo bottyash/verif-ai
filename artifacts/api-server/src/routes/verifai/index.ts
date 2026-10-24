@@ -12,6 +12,7 @@ import {
   GenerateVerifaiQuestionsParams,
   GenerateVerifaiQuestionsResponse,
   GetVerifaiDashboardResponse,
+  GetVerifaiIdeaNeighborsResponse,
   GetVerifaiIdeaParams,
   GetVerifaiIdeaResponse,
   GetVerifaiMessagesResponse,
@@ -27,6 +28,8 @@ import {
   SendVerifaiMessageBody,
   SendVerifaiMessageParams,
   SendVerifaiMessageResponse,
+  TrackVerifaiNeighborsEventBody,
+  TrackVerifaiNeighborsEventResponse,
   TrackVerifaiUnlockClickResponse,
 } from "@workspace/api-zod";
 import {
@@ -43,6 +46,10 @@ import {
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { requireAuth, type AuthenticatedRequest } from "../../middlewares/requireAuth";
 import { analyzeStartupIdea, ideaContext } from "../../lib/verifai-analysis";
+import {
+  findIdeaNeighbors,
+  NeighborsRateLimitError,
+} from "../../lib/idea-neighbors";
 import {
   getPineLabsClient,
   isPineLabsConfigured,
@@ -595,6 +602,86 @@ router.post("/verifai/ideas/:ideaId/unlock-click", async (req, res): Promise<voi
     eventType: "unlock_offer_clicked",
   });
   res.json(TrackVerifaiUnlockClickResponse.parse({ clicked: true }));
+});
+
+async function hasFullReport(ideaId: string, ownerId: string): Promise<boolean> {
+  const [report] = await db
+    .select({ isFullReport: validationReportsTable.isFullReport })
+    .from(validationReportsTable)
+    .where(and(eq(validationReportsTable.ideaId, ideaId), eq(validationReportsTable.ownerId, ownerId)))
+    .orderBy(desc(validationReportsTable.generatedAt))
+    .limit(1);
+  return Boolean(report?.isFullReport);
+}
+
+router.post("/verifai/ideas/:ideaId/neighbors", async (req, res): Promise<void> => {
+  const params = GetVerifaiIdeaParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const ownerId = ownerIdOf(req as AuthenticatedRequest);
+  const idea = await findIdea(params.data.ideaId, ownerId);
+  if (!idea) {
+    res.status(404).json({ error: "Idea not found." });
+    return;
+  }
+  // Same paid gate as the report: an unlocked idea with a full report.
+  if (!idea.premiumUnlockedAt || !(await hasFullReport(idea.id, ownerId))) {
+    res.status(403).json({ error: "This section is part of the full report." });
+    return;
+  }
+  try {
+    const result = await findIdeaNeighbors(idea, ownerId);
+    res.json(GetVerifaiIdeaNeighborsResponse.parse({ ideaId: idea.id, ...result }));
+  } catch (error) {
+    if (error instanceof NeighborsRateLimitError) {
+      res.status(429).json({ error: "You have looked up neighbors a lot in the last hour. Try again a little later." });
+      return;
+    }
+    req.log.error({ err: error, ideaId: idea.id }, "Idea Neighbors lookup failed");
+    res.status(503).json({ error: "We could not load Idea Neighbors right now. The rest of your report is unaffected." });
+  }
+});
+
+router.post("/verifai/ideas/:ideaId/neighbors/events", async (req, res): Promise<void> => {
+  const params = GetVerifaiIdeaParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const body = TrackVerifaiNeighborsEventBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+  const ownerId = ownerIdOf(req as AuthenticatedRequest);
+  const idea = await findIdea(params.data.ideaId, ownerId);
+  if (!idea) {
+    res.status(404).json({ error: "Idea not found." });
+    return;
+  }
+  if (!idea.premiumUnlockedAt) {
+    res.status(403).json({ error: "This section is part of the full report." });
+    return;
+  }
+  const eventType = body.data.event === "viewed" ? "neighbors_viewed" : "neighbors_yc_link_clicked";
+  // Views count once per user and idea; every YC link click is recorded.
+  const [existingView] = eventType === "neighbors_viewed"
+    ? await db
+        .select({ id: reportUnlockEventsTable.id })
+        .from(reportUnlockEventsTable)
+        .where(and(
+          eq(reportUnlockEventsTable.ownerId, ownerId),
+          eq(reportUnlockEventsTable.ideaId, idea.id),
+          eq(reportUnlockEventsTable.eventType, "neighbors_viewed"),
+        ))
+        .limit(1)
+    : [];
+  if (!existingView) {
+    await db.insert(reportUnlockEventsTable).values({ ownerId, ideaId: idea.id, eventType });
+  }
+  res.json(TrackVerifaiNeighborsEventResponse.parse({ recorded: true }));
 });
 
 router.post("/verifai/ideas/:ideaId/demo-unlock", async (req, res): Promise<void> => {

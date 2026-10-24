@@ -907,6 +907,51 @@ export const TrackVerifaiUnlockClickResponse = zod.object({
 
 
 /**
+ * Paid reports only. Uses the stored idea text, shortlists records from the YC dataset, and returns up to five validated neighbors.
+ * @summary Find Y Combinator companies and requests close to an unlocked idea
+ */
+export const GetVerifaiIdeaNeighborsParams = zod.object({
+  "ideaId": zod.coerce.string()
+})
+
+export const GetVerifaiIdeaNeighborsResponse = zod.object({
+  "ideaId": zod.string(),
+  "summary": zod.string(),
+  "neighbors": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "summary": zod.string(),
+  "type": zod.enum(['rfs', 'company']),
+  "batch": zod.string().nullable(),
+  "status": zod.string().nullable(),
+  "tags": zod.array(zod.string()),
+  "url": zod.string(),
+  "relationshipType": zod.enum(['Same problem, different approach', 'Same approach, different market', 'Adjacent opportunity', 'Direct competitor', 'Aligned with YC RFS']),
+  "overlap": zod.string(),
+  "differentiationAngle": zod.string(),
+  "lesson": zod.string().nullable()
+})),
+  "generatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Record an Idea Neighbors view or YC link click
+ */
+export const TrackVerifaiNeighborsEventParams = zod.object({
+  "ideaId": zod.coerce.string()
+})
+
+export const TrackVerifaiNeighborsEventBody = zod.object({
+  "event": zod.enum(['viewed', 'yc_link_clicked'])
+})
+
+export const TrackVerifaiNeighborsEventResponse = zod.object({
+  "recorded": zod.literal(true)
+})
+
+
+/**
  * @summary Unlock a full report for product research without taking payment
  */
 export const DemoUnlockVerifaiReportParams = zod.object({

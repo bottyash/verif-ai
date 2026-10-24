@@ -300,6 +300,61 @@ paths:
                 $ref: "#/components/schemas/UnlockClickResponse"
         "404":
           description: Idea or report not found
+  /verifai/ideas/{ideaId}/neighbors:
+    post:
+      operationId: getVerifaiIdeaNeighbors
+      tags: [verifai]
+      summary: Find Y Combinator companies and requests close to an unlocked idea
+      description: Paid reports only. Uses the stored idea text, shortlists records from the YC dataset, and returns up to five validated neighbors.
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Validated idea neighbors
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdeaNeighbors"
+        "403":
+          description: The full report is not unlocked
+        "404":
+          description: Idea or report not found
+        "429":
+          description: Too many new lookups for this user
+        "503":
+          description: Neighbors could not be generated right now
+  /verifai/ideas/{ideaId}/neighbors/events:
+    post:
+      operationId: trackVerifaiNeighborsEvent
+      tags: [verifai]
+      summary: Record an Idea Neighbors view or YC link click
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NeighborsEventInput"
+      responses:
+        "200":
+          description: Event recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NeighborsEventResponse"
+        "403":
+          description: The full report is not unlocked
+        "404":
+          description: Idea not found
   /verifai/ideas/{ideaId}/demo-unlock:
     post:
       operationId: demoUnlockVerifaiReport
@@ -818,6 +873,56 @@ components:
       required: [clicked]
       properties:
         clicked: { type: boolean, const: true }
+    IdeaNeighbor:
+      type: object
+      required: [id, title, summary, type, batch, status, tags, url, relationshipType, overlap, differentiationAngle, lesson]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        summary: { type: string }
+        type:
+          type: string
+          enum: [rfs, company]
+        batch: { type: [string, "null"] }
+        status: { type: [string, "null"] }
+        tags:
+          type: array
+          items: { type: string }
+        url: { type: string }
+        relationshipType:
+          type: string
+          enum:
+            - Same problem, different approach
+            - Same approach, different market
+            - Adjacent opportunity
+            - Direct competitor
+            - Aligned with YC RFS
+        overlap: { type: string }
+        differentiationAngle: { type: string }
+        lesson: { type: [string, "null"] }
+    IdeaNeighbors:
+      type: object
+      required: [ideaId, summary, neighbors, generatedAt]
+      properties:
+        ideaId: { type: string }
+        summary: { type: string }
+        neighbors:
+          type: array
+          items:
+            $ref: "#/components/schemas/IdeaNeighbor"
+        generatedAt: { type: string, format: date-time }
+    NeighborsEventInput:
+      type: object
+      required: [event]
+      properties:
+        event:
+          type: string
+          enum: [viewed, yc_link_clicked]
+    NeighborsEventResponse:
+      type: object
+      required: [recorded]
+      properties:
+        recorded: { type: boolean, const: true }
     DemoUnlockInput:
       type: object
       required: [willingnessToPay]

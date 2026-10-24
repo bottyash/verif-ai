@@ -1,0 +1,192 @@
+[
+  {
+    "id": "co-razorpay",
+    "title": "Razorpay",
+    "summary": "Full-stack financial solutions for Indian businesses: online payment acceptance, payouts, banking and payroll, built after the founders saw how hard it was for Indian startups to accept payments online.",
+    "tags": ["Fintech", "Payments", "Banking as a Service", "India", "B2B"],
+    "batch": "Winter 2015",
+    "status": "Active",
+    "url": "https://www.ycombinator.com/companies/razorpay",
+    "type": "company"
+  },
+  {
+    "id": "co-meesho",
+    "title": "Meesho",
+    "summary": "An online marketplace that makes e-commerce accessible for India's next billion users and lets small businesses and individual entrepreneurs sell online.",
+    "tags": ["E-commerce", "Marketplace", "Retail", "India", "Small business"],
+    "batch": "Summer 2016",
+    "status": "Public",
+    "url": "https://www.ycombinator.com/companies/meesho",
+    "type": "company"
+  },
+  {
+    "id": "co-stripe",
+    "title": "Stripe",
+    "summary": "Economic infrastructure for the internet: developer-first software for businesses of every size to accept payments and manage their business online.",
+    "tags": ["Fintech", "Payments", "SaaS", "Developer tools", "B2B"],
+    "batch": "Summer 2009",
+    "status": "Active",
+    "url": "https://www.ycombinator.com/companies/stripe",
+    "type": "company"
+  },
+  {
+    "id": "co-gusto",
+    "title": "Gusto",
+    "summary": "Payroll, benefits and HR for small and growing businesses, so owners can take care of their team without a dedicated HR department.",
+    "tags": ["Payroll", "HR Tech", "B2B", "Small business", "Health insurance"],
+    "batch": "Winter 2012",
+    "status": "Active",
+    "url": "https://www.ycombinator.com/companies/gusto",
+    "type": "company"
+  },
+  {
+    "id": "co-deel",
+    "title": "Deel",
+    "summary": "An all-in-one HR and payroll platform for global teams, combining hiring, payroll, compliance and benefits across many countries.",
+    "tags": ["HR Tech", "Payroll", "Compliance", "Fintech", "B2B", "Remote work"],
+    "batch": "Winter 2019",
+    "status": "Active",
+    "url": "https://www.ycombinator.com/companies/deel",
+    "type": "company"
+  },
+  {
+    "id": "co-doordash",
+    "title": "DoorDash",
+    "summary": "Connects customers with local restaurants and stores through on-demand delivery, giving local businesses a way to reach customers online.",
+    "tags": ["Marketplace", "Delivery", "Food", "Local commerce", "Consumer"],
+    "batch": "Summer 2013",
+    "status": "Public",
+    "url": "https://www.ycombinator.com/companies/doordash",
+    "type": "company"
+  },
+  {
+    "id": "co-instacart",
+    "title": "Instacart",
+    "summary": "A marketplace for same-day grocery delivery and pickup from local stores, using personal shoppers for fulfilment.",
+    "tags": ["Grocery", "Delivery", "E-commerce", "Marketplace", "Consumer"],
+    "batch": "Summer 2012",
+    "status": "Public",
+    "url": "https://www.ycombinator.com/companies/instacart",
+    "type": "company"
+  },
+  {
+    "id": "co-rappi",
+    "title": "Rappi",
+    "summary": "An on-demand delivery super-app for Latin America covering food, groceries and retail, with financial services layered on top.",
+    "tags": ["Delivery", "Super-app", "Fintech", "Latin America", "Emerging markets"],
+    "batch": "Winter 2016",
+    "status": "Active",
+    "url": "https://www.ycombinator.com/companies/rappi",
+    "type": "company"
+  },
+  {
+    "id": "co-homejoy",
+    "title": "Homejoy",
+    "summary": "An online marketplace matching households with background-checked home cleaning professionals, booked in a few clicks.",
+    "tags": ["Marketplace", "Home services", "Gig economy", "Consumer"],
+    "batch": "Summer 2010",
+    "status": "Acquired",
+    "url": "https://www.ycombinator.com/companies/homejoy",
+    "type": "company"
+  },
+  {
+    "id": "co-atrium",
+    "title": "Atrium",
+    "summary": "A technology-powered law firm for startups that tried to replace the billable hour with software-driven, fixed-fee legal services.",
+    "tags": ["LegalTech", "Startups", "Professional services", "B2B"],
+    "batch": "Winter 2018",
+    "status": "Inactive",
+    "url": "https://www.ycombinator.com/companies/atrium",
+    "type": "company"
+  },
+  {
+    "id": "co-cleanly",
+    "title": "Cleanly",
+    "summary": "On-demand laundry and dry-cleaning pickup and delivery, scheduled around the customer's time through an app.",
+    "tags": ["Delivery", "Logistics", "Laundry", "Consumer services"],
+    "batch": "Winter 2015",
+    "status": "Active",
+    "url": "https://www.ycombinator.com/companies/cleanly",
+    "type": "company"
+  },
+  {
+    "id": "co-bloomtech",
+    "title": "Bloom Institute of Technology",
+    "summary": "An online coding school (formerly Lambda School) that trains students and is paid through a share of income once graduates land a job above a threshold.",
+    "tags": ["Education", "Edtech", "Fintech", "Income share", "Careers"],
+    "batch": "Summer 2017",
+    "status": "Active",
+    "url": "https://www.ycombinator.com/companies/lambda-school",
+    "type": "company"
+  },
+  {
+    "id": "co-zapier",
+    "title": "Zapier",
+    "summary": "Workflow automation for small and mid-sized businesses that connects thousands of work apps without code.",
+    "tags": ["Automation", "SaaS", "No-code", "B2B", "Small business"],
+    "batch": "Summer 2012",
+    "status": "Active",
+    "url": "https://www.ycombinator.com/companies/zapier",
+    "type": "company"
+  },
+  {
+    "id": "rfs-aging-population",
+    "title": "AI for the Aging Population",
+    "summary": "Caregiver shortages are growing while little technology is built for older adults. YC wants voice-first AI products, safety monitoring and care tools that help older people stay independent and support family caregivers.",
+    "tags": ["Healthcare", "Elder care", "Voice AI", "Consumer", "Caregiving"],
+    "batch": "Fall 2026 RFS",
+    "status": "Open",
+    "url": "https://www.ycombinator.com/rfs#ai-for-the-aging-population",
+    "type": "rfs"
+  },
+  {
+    "id": "rfs-physical-world-os",
+    "title": "New Operating Systems for the Physical World",
+    "summary": "Most workers don't sit at a desk, and software for construction, maintenance and field operations has barely changed. YC wants AI-native systems that quote, dispatch, schedule and bill across humans, robots and agents.",
+    "tags": ["Field services", "Construction", "Vertical SaaS", "AI agents", "Operations"],
+    "batch": "Fall 2026 RFS",
+    "status": "Open",
+    "url": "https://www.ycombinator.com/rfs#new-operating-systems-for-the-physical-world",
+    "type": "rfs"
+  },
+  {
+    "id": "rfs-ai-compliance",
+    "title": "AI-Native Compliance Infrastructure",
+    "summary": "Financial compliance is still spreadsheets, point tools and headcount, and the cost grows as companies expand into new markets. YC wants AI that monitors regulatory change, flags anomalies, generates reports and keeps audit trails.",
+    "tags": ["Compliance", "Fintech", "RegTech", "B2B", "AI agents"],
+    "batch": "Fall 2026 RFS",
+    "status": "Open",
+    "url": "https://www.ycombinator.com/rfs#ai-native-compliance-infrastructure",
+    "type": "rfs"
+  },
+  {
+    "id": "rfs-ai-consumer",
+    "title": "AI-Powered Consumer Products for 1 Billion People",
+    "summary": "Every platform shift creates consumer giants, and AI agents are becoming capable and cheap enough to act like a person on a user's behalf. YC wants new AI-first consumer products with mass-market reach.",
+    "tags": ["Consumer", "AI agents", "Mass market", "Mobile"],
+    "batch": "Fall 2026 RFS",
+    "status": "Open",
+    "url": "https://www.ycombinator.com/rfs#ai-powered-consumer-products-for-1-billion-people",
+    "type": "rfs"
+  },
+  {
+    "id": "rfs-small-software",
+    "title": "A Cloud for Small Software",
+    "summary": "Agents make it easy to build purpose-built tools for one person or a small team, but deploying and sharing them is still hard. YC wants a cloud designed for this long tail of bespoke internal software.",
+    "tags": ["Developer tools", "Cloud", "Internal tools", "No-code", "AI agents"],
+    "batch": "Fall 2026 RFS",
+    "status": "Open",
+    "url": "https://www.ycombinator.com/rfs#a-cloud-for-small-software",
+    "type": "rfs"
+  },
+  {
+    "id": "rfs-multiplayer-ai",
+    "title": "Multiplayer AI",
+    "summary": "The best work tools won by going multiplayer, but working with AI is still mostly single-player chat. YC wants products where teams and AI agents collaborate in shared spaces.",
+    "tags": ["Collaboration", "Productivity", "AI agents", "B2B", "SaaS"],
+    "batch": "Fall 2026 RFS",
+    "status": "Open",
+    "url": "https://www.ycombinator.com/rfs#multiplayer-ai",
+    "type": "rfs"
+  }
+]

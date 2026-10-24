@@ -8,7 +8,9 @@ export type ReportUnlockEventType =
   | "unlock_clicked"
   | "unlock_completed"
   | "unlock_offer_clicked"
-  | "demo_unlocked";
+  | "demo_unlocked"
+  | "neighbors_viewed"
+  | "neighbors_yc_link_clicked";
 
 export const reportUnlockEventsTable = pgTable(
   "verifai_report_unlock_events",

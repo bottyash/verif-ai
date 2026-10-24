@@ -455,6 +455,67 @@ export const UnlockClickResponseValue = {
 } as const;
 export type UnlockClickResponse = typeof UnlockClickResponseValue;
 
+export type IdeaNeighborType = typeof IdeaNeighborType[keyof typeof IdeaNeighborType];
+
+
+export const IdeaNeighborType = {
+  rfs: 'rfs',
+  company: 'company',
+} as const;
+
+export type IdeaNeighborRelationshipType = typeof IdeaNeighborRelationshipType[keyof typeof IdeaNeighborRelationshipType];
+
+
+export const IdeaNeighborRelationshipType = {
+  'Same_problem,_different_approach': 'Same problem, different approach',
+  'Same_approach,_different_market': 'Same approach, different market',
+  Adjacent_opportunity: 'Adjacent opportunity',
+  Direct_competitor: 'Direct competitor',
+  Aligned_with_YC_RFS: 'Aligned with YC RFS',
+} as const;
+
+export interface IdeaNeighbor {
+  id: string;
+  title: string;
+  summary: string;
+  type: IdeaNeighborType;
+  /** @nullable */
+  batch: string | null;
+  /** @nullable */
+  status: string | null;
+  tags: string[];
+  url: string;
+  relationshipType: IdeaNeighborRelationshipType;
+  overlap: string;
+  differentiationAngle: string;
+  /** @nullable */
+  lesson: string | null;
+}
+
+export interface IdeaNeighbors {
+  ideaId: string;
+  summary: string;
+  neighbors: IdeaNeighbor[];
+  generatedAt: string;
+}
+
+export type NeighborsEventInputEvent = typeof NeighborsEventInputEvent[keyof typeof NeighborsEventInputEvent];
+
+
+export const NeighborsEventInputEvent = {
+  viewed: 'viewed',
+  yc_link_clicked: 'yc_link_clicked',
+} as const;
+
+export interface NeighborsEventInput {
+  event: NeighborsEventInputEvent;
+}
+
+export const NeighborsEventResponseValue = {
+  recorded: true,
+} as const;
+export type NeighborsEventResponse = typeof NeighborsEventResponseValue;
+
 export type DemoUnlockInputWillingnessToPay = typeof DemoUnlockInputWillingnessToPay[keyof typeof DemoUnlockInputWillingnessToPay];
 
 

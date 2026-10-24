@@ -27,6 +27,8 @@ _Populate as you build — short repo map plus pointers to the source-of-truth f
 ## Architecture decisions
 
 - Report chart data (`paidDetails.visuals`) is optional and parsed leniently, so older stored reports still load; the UI hides any chart whose data is missing. All modelled figures are labelled as assumptions, in INR.
+- Idea Neighbors (paid report): YC companies/RFS from `data/yc_ideas.json`. The Replit OpenAI connection has no embeddings, so retrieval is an LLM shortlist (keyword prefilter past 120 records) then an LLM pick of 5; ids outside the shortlist are dropped. Results cache by hash of dataset version + normalized idea text (memory + `.cache/idea-neighbors/`); 10 new lookups/user/hour. Views and YC link clicks are logged as `neighbors_viewed` / `neighbors_yc_link_clicked` in the unlock-events table. Refresh the dataset with `pnpm --filter @workspace/scripts run refresh-yc` (`--add slug,slug`, `--rfs`, `--dry-run`); it honours robots.txt.
+- The free report shows only a numberless "Who's already near you?" teaser line for Idea Neighbors — never a made-up count.
 - The admin link in the workspace menu uses `GET /verifai/admin/access` as a navigation hint only; every admin data route still enforces the server-side allowlist.
 
 ## Product
