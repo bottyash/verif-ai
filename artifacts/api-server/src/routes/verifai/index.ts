@@ -6,6 +6,7 @@ import {
   CreateVerifaiIdeaBody,
   CreateVerifaiIdeaResponse,
   CreateVerifaiPaymentResponse,
+  DemoUnlockVerifaiReportResponse,
   GetVerifaiCheckoutStatusResponse,
   GenerateVerifaiQuestionsParams,
   GenerateVerifaiQuestionsResponse,
@@ -184,14 +185,13 @@ function publicReport(report: typeof validationReportsTable.$inferSelect) {
     summary: report.summary,
     sections: report.sections.map((section) => ({
       ...section,
+      summary: full ? section.summary : "",
       strengths: full ? section.strengths : [],
       improvements: full ? section.improvements : [],
       evidence: full ? section.evidence : [],
     })),
     comparisons: full ? report.comparisons : [],
-    // Keep three concise AI refinement suggestions on the free first-page
-    // snapshot; the paid report still receives the complete recommendation set.
-    nextSteps: full ? report.nextSteps : report.nextSteps.slice(0, 3),
+    nextSteps: full ? report.nextSteps : [],
     generatedAt: report.generatedAt,
     isFullReport: full,
   };
@@ -525,10 +525,55 @@ router.get("/verifai/ideas/:ideaId/checkout-status", async (req, res): Promise<v
   res.json(
     GetVerifaiCheckoutStatusResponse.parse({
       provider: "pinelabs",
-      configured: isPineLabsConfigured(),
+      configured: process.env.VERIFAI_PAYMENT_GATEWAY_ENABLED === "true" && isPineLabsConfigured(),
       amount: 20,
       currency: "INR",
       unlocked: Boolean(idea.premiumUnlockedAt),
+    }),
+  );
+});
+
+router.post("/verifai/ideas/:ideaId/demo-unlock", async (req, res): Promise<void> => {
+  if (process.env.NODE_ENV !== "development") {
+    res.status(403).json({ error: "Demo unlock is available in development only." });
+    return;
+  }
+  const params = GetVerifaiIdeaParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const ownerId = ownerIdOf(req as AuthenticatedRequest);
+  const idea = await findIdea(params.data.ideaId, ownerId);
+  if (!idea) {
+    res.status(404).json({ error: "Idea not found." });
+    return;
+  }
+  const [report] = await db
+    .select({ id: validationReportsTable.id })
+    .from(validationReportsTable)
+    .where(and(eq(validationReportsTable.ideaId, idea.id), eq(validationReportsTable.ownerId, ownerId)))
+    .orderBy(desc(validationReportsTable.generatedAt))
+    .limit(1);
+  if (!report) {
+    res.status(409).json({ error: "Generate a report before using the demo unlock." });
+    return;
+  }
+  await db.transaction(async (tx) => {
+    await tx
+      .update(ideasTable)
+      .set({ premiumUnlockedAt: idea.premiumUnlockedAt ?? new Date() })
+      .where(and(eq(ideasTable.id, idea.id), eq(ideasTable.ownerId, ownerId)));
+    await tx
+      .update(validationReportsTable)
+      .set({ isFullReport: true })
+      .where(and(eq(validationReportsTable.ideaId, idea.id), eq(validationReportsTable.ownerId, ownerId)));
+  });
+  res.json(
+    DemoUnlockVerifaiReportResponse.parse({
+      ideaId: idea.id,
+      unlocked: true,
+      demo: true,
     }),
   );
 });
@@ -537,6 +582,10 @@ router.post("/verifai/ideas/:ideaId/payments", async (req, res): Promise<void> =
   const params = GetVerifaiIdeaParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
+    return;
+  }
+  if (process.env.VERIFAI_PAYMENT_GATEWAY_ENABLED !== "true") {
+    res.status(503).json({ error: "Real payment checkout is disabled in this prototype. Use the demo unlock." });
     return;
   }
   const ownerId = ownerIdOf(req as AuthenticatedRequest);

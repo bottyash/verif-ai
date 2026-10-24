@@ -18,24 +18,20 @@ import { shadcn } from '@clerk/themes';
 import {
   getGetVerifaiDashboardQueryKey,
   getGetVerifaiIdeaQueryKey,
-  getGetVerifaiCheckoutStatusQueryKey,
   getGetVerifaiMessagesQueryKey,
-  getGetVerifaiPaymentStatusQueryKey,
   getGetVerifaiReportQueryKey,
   getListVerifaiIdeasQueryKey,
-  useCreateVerifaiPayment,
   useCreateVerifaiIdea,
   useGenerateVerifaiQuestions,
   useGetVerifaiDashboard,
-  useGetVerifaiCheckoutStatus,
   useGetVerifaiIdea,
   useGetVerifaiMessages,
-  useGetVerifaiPaymentStatus,
   useGetVerifaiReport,
   useListVerifaiIdeas,
   useRunVerifaiAnalysis,
   useSaveVerifaiAnswers,
   useSendVerifaiMessage,
+  useDemoUnlockVerifaiReport,
 } from '@workspace/api-client-react';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, useParams } from 'wouter';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -346,63 +342,72 @@ function Questions() {
   </main></Shell>;
 }
 
-function Report() {
+function Report({finalView=false}:{finalView?:boolean}) {
   const {ideaId=''}=useParams<{ideaId:string}>();
   const report=useGetVerifaiReport(ideaId,{query:{enabled:!!ideaId,queryKey:getGetVerifaiReportQueryKey(ideaId)}});
   const idea=useGetVerifaiIdea(ideaId,{query:{enabled:!!ideaId,queryKey:getGetVerifaiIdeaQueryKey(ideaId)}});
-  const checkout=useGetVerifaiCheckoutStatus(ideaId,{query:{enabled:!!ideaId,queryKey:getGetVerifaiCheckoutStatusQueryKey(ideaId)}});
-  const [paymentId,setPaymentId]=useState(()=>new URLSearchParams(window.location.search).get('payment')??'');
-  const paymentStatus=useGetVerifaiPaymentStatus(ideaId,paymentId,{query:{enabled:!!ideaId&&!!paymentId,queryKey:getGetVerifaiPaymentStatusQueryKey(ideaId,paymentId),refetchInterval:(query)=>{const status=query.state.data?.status;return status==='PAID'||status==='FAILED'||status==='CANCELLED'?false:2500;},retry:false}});
-  const createPayment=useCreateVerifaiPayment();
-  const [checkoutError,setCheckoutError]=useState('');
   const run=useRunVerifaiAnalysis();
+  const demoUnlock=useDemoUnlockVerifaiReport();
   const queryClient=useQueryClient();
-  useEffect(()=>{
-    if(!paymentStatus.data?.unlocked) return;
-    void queryClient.invalidateQueries({queryKey:getGetVerifaiReportQueryKey(ideaId)});
-    void queryClient.invalidateQueries({queryKey:getGetVerifaiCheckoutStatusQueryKey(ideaId)});
-    setPaymentId('');
-    window.history.replaceState({},'',`${basePath}/ideas/${ideaId}/report`);
-  },[paymentStatus.data?.unlocked,ideaId,queryClient]);
+  const [,setLocation]=useLocation();
+  const [demoError,setDemoError]=useState('');
   const generate=()=>run.mutate({ideaId},{onSuccess:()=>{void queryClient.invalidateQueries({queryKey:getGetVerifaiReportQueryKey(ideaId)});void queryClient.invalidateQueries({queryKey:getGetVerifaiDashboardQueryKey()});}});
-  const startCheckout=()=>{
-    setCheckoutError('');
-    createPayment.mutate({ideaId},{onSuccess:(session)=>window.location.assign(session.checkoutUrl),onError:()=>setCheckoutError('Pine Labs could not start checkout. No payment was taken; try again shortly.')});
+  const unlockForDemo=()=>{
+    setDemoError('');
+    demoUnlock.mutate({ideaId},{onSuccess:async()=>{
+      await Promise.all([
+        queryClient.invalidateQueries({queryKey:getGetVerifaiReportQueryKey(ideaId)}),
+        queryClient.invalidateQueries({queryKey:getGetVerifaiIdeaQueryKey(ideaId)}),
+      ]);
+      setLocation(`/ideas/${ideaId}/final`);
+    },onError:()=>setDemoError('The demo unlock did not go through. Your snapshot is unchanged; try once more.')});
   };
-  if(report.isLoading) return <Shell title="Validation snapshot"><LoadingPage/></Shell>;
-  if(report.isError || !report.data) return <Shell title="Validation snapshot"><main className="page"><div className="page-header"><div><div className="eyebrow">Validation snapshot</div><h1>{idea.data?.name ?? 'Your idea'}</h1></div></div>{run.isPending ? <AnalysisWaiting/> : <div className="empty-state"><div className="empty-symbol"><FileText size={22}/></div><h3>No snapshot to show yet.</h3><p>Complete the question set first, then build a scoped free snapshot based on the information available.</p>{run.isError&&<p role="alert">The analysis could not be generated. Please try again.</p>}<button className="btn btn-primary" onClick={generate} data-testid="button-run-analysis">Generate free snapshot <ArrowRight size={15}/></button></div>}</main></Shell>;
+  if(report.isLoading) return <Shell title={finalView?'Final results':'Report preview'}><LoadingPage/></Shell>;
+  if(report.isError || !report.data) return <Shell title={finalView?'Final results':'Report preview'}><main className="page"><div className="page-header"><div><div className="eyebrow">Validation snapshot</div><h1>{idea.data?.name ?? 'Your idea'}</h1></div></div>{run.isPending ? <AnalysisWaiting/> : <div className="empty-state"><div className="empty-symbol"><FileText size={22}/></div><h3>No snapshot to show yet.</h3><p>Complete the question set first, then build a scoped free snapshot based on the information available.</p>{run.isError&&<p role="alert">The analysis could not be generated. Please try again.</p>}<button className="btn btn-primary" onClick={generate} data-testid="button-run-analysis">Generate free snapshot <ArrowRight size={15}/></button></div>}</main></Shell>;
   const data=report.data;
   const score=Math.max(0,Math.min(100,data.score));
   const sections=data.sections??[];
   const comparisons=data.comparisons??[];
   const nextSteps=data.nextSteps??[];
-  return <Shell title="Validation snapshot"><main className={`page ${data.isFullReport?'report-page-full':'report-page-preview'}`}>
-     <div className="page-header"><div><div className="eyebrow">A scoped read · Generated {new Date(data.generatedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div><h1>{data.ideaName}</h1><p className="muted">A first-page snapshot of what looks promising and what to sharpen next.</p></div><Link href={`/ideas/${ideaId}/questions`} className="btn btn-outline" data-testid="link-review-answers"><Layers3 size={15}/> Review my answers</Link></div>
-     {run.isPending && <AnalysisWaiting/>}
-     {paymentId&&<div className="notice" role="status"><strong>{paymentStatus.data?.unlocked?'Payment confirmed.':paymentStatus.isError?'We could not verify the payment yet.':paymentStatus.data?.status==='FAILED'||paymentStatus.data?.status==='CANCELLED'?'Payment was not completed.':'Checking Pine Labs payment status…'}</strong> {paymentStatus.data?.unlocked?'The full report is now available.':paymentStatus.isError?'Retry status verification before attempting another payment.':paymentStatus.data?.status==='FAILED'||paymentStatus.data?.status==='CANCELLED'?'You can start checkout again when ready.':''}{paymentStatus.isError&&<button className="inline-link" style={{marginLeft:10}} onClick={()=>void paymentStatus.refetch()}>Retry verification</button>}</div>}
+  if(finalView&&!data.isFullReport) return <Shell title="Final results"><main className="page"><div className="empty-state"><div className="empty-symbol"><LockKeyhole size={22}/></div><h3>This report is still in preview mode.</h3><p>Use the demo unlock on the preview screen to open the final results. It will not process a payment.</p><Link href={`/ideas/${ideaId}/report`} className="btn btn-primary" data-testid="link-back-to-preview">Back to report preview</Link></div></main></Shell>;
+  return <Shell title={finalView?'Final results':'Report preview'}><main className={`page ${data.isFullReport?'report-page-full':'report-page-preview'}`}>
+    <div className="page-header"><div><div className="eyebrow">{finalView?'DEMO UNLOCK · NO PAYMENT TAKEN':`A first look · Generated ${new Date(data.generatedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}`}</div><h1>{finalView?'Your full report':data.ideaName}</h1><p className="muted">{finalView?'The complete idea assessment is ready to explore.':'A quick signal on where the idea stands. Unlock the full read when you are ready.'}</p></div>{finalView?<Link href={`/ideas/${ideaId}/report`} className="btn btn-outline" data-testid="link-back-to-preview"><ArrowLeft size={15}/> Back to preview</Link>:<Link href={`/ideas/${ideaId}/questions`} className="btn btn-outline" data-testid="link-review-answers"><Layers3 size={15}/> Review my answers</Link>}</div>
+    {finalView&&<div className="notice" role="status" data-testid="status-demo-unlocked"><strong>Prototype mode.</strong> Full access is enabled for testing. No payment was taken.</div>}
     <section className="report-score" style={{['--score' as any]:`${score*3.6}deg`}} data-testid="report-score">
       <div className="score-ring"><div className="score-inner"><div className="score-number">{score}</div><div className="score-denom">OUT OF 100</div></div></div>
-      <div><div className="verdict">{data.verdict}</div><h2>{data.summary || 'A starting point for a better-informed next step.'}</h2><p>This score reflects the details and evidence available in this snapshot. Missing information lowers confidence, not your potential.</p></div>
+      <div><div className="verdict">{data.verdict}</div><h2>{data.summary || 'A starting point for a better-informed next step.'}</h2><p>A directional signal based on what you shared — not a prediction of success.</p></div>
     </section>
-    {!data.isFullReport && <div className="notice" data-testid="status-free-snapshot"><strong>First-page preview.</strong> This is a short on-screen snapshot. The detailed report stays behind the full-report unlock; there is no PDF download.</div>}
-    <section className="snapshot-areas" aria-labelledby="snapshot-areas-title">
-      <div className="snapshot-section-heading"><div><div className="question-count">The quick read</div><h2 id="snapshot-areas-title">{data.isFullReport?'Six lenses on the idea':'Six signals, one first page'}</h2></div><span className="muted">Directional, not definitive</span></div>
-      <div className="snapshot-area-grid">{sections.map((section:any)=><article className="snapshot-area" key={section.key} data-testid={`section-report-${section.key}`}><span>{section.title}</span><strong>{section.score}</strong><div className="snapshot-area-track"><i style={{width:`${Math.max(0,Math.min(100,section.score))}%`}}/></div>{data.isFullReport&&<p>{section.summary}</p>}</article>)}</div>
-    </section>
-    {sections.length===0 && <div className="empty-state"><h3>Area detail is not available.</h3><p>The snapshot has a headline score but no section data to display.</p></div>}
-    {nextSteps.length>0&&<section className="ai-refinement" aria-labelledby="ai-refinement-title" data-testid="section-ai-refinement">
-      <div className="snapshot-section-heading"><div><div className="question-count">Your AI idea coach</div><h2 id="ai-refinement-title">Make the idea sharper.</h2><p className="muted">Suggestions for framing, execution, and the idea itself — not homework to rewrite your answers.</p></div><span className="refinement-spark" aria-hidden="true"><Lightbulb size={22}/></span></div>
-      <div className="refinement-grid">{nextSteps.slice(0,data.isFullReport?nextSteps.length:3).map((item:string,index:number)=>{
-        const tag=item.match(/^(?:\[(FRAME|TEST|SHARPEN)\]|(FRAME|TEST|SHARPEN))\s*:?\s*/i);
-        const category=(tag?.[1]??tag?.[2]??['FRAME','TEST','SHARPEN'][index%3]).toUpperCase();
-        const titles:Record<string,string>={FRAME:'Frame it clearly',TEST:'Try it in the real world',SHARPEN:'Sharpen the idea'};
-        const suggestion=tag?item.slice(tag[0].length):item;
-        return <article className="refinement-card" key={`${category}-${index}`} data-testid={`card-refinement-${index}`}><span className="refinement-tag">{category}</span><h3>{titles[category]??'A useful next move'}</h3><p>{suggestion}</p></article>;
-      })}</div>
+    {!data.isFullReport&&<section className="unlock-offer" data-testid="section-unlock-offer">
+      <div className="unlock-offer-heading"><div className="eyebrow">THE FULL PICTURE</div><h2>Ready for the useful details?</h2><p>One unlock opens the complete report and AI founder coach for this idea.</p></div>
+      <div className="unlock-benefit-grid">
+        <article className="unlock-benefit"><span>01 / SIX EXPERT LENSES</span><h3>See what is strong — and what needs proof.</h3><p>Market, customer & business model, technology, go-to-market, strategic risk, and India compliance.</p></article>
+        <article className="unlock-benefit"><span>02 / EVIDENCE & TRADE-OFFS</span><h3>Get the reasoning behind the score.</h3><p>Strengths, gaps, cited evidence, assumptions, and comparisons with current workarounds.</p></article>
+        <article className="unlock-benefit"><span>03 / YOUR NEXT MOVE</span><h3>Leave with a sharper plan.</h3><p>AI framing and execution suggestions, prioritized experiments, and founder-coach chat.</p></article>
+      </div>
+      <div className="unlock-action">
+        <div><strong>Prototype unlock · ₹20 planned price</strong><p>No charge in this demo. Payment gateway and payment methods will be connected later.</p></div>
+        {import.meta.env.DEV?<button className="btn btn-primary" onClick={unlockForDemo} disabled={demoUnlock.isPending} data-testid="button-demo-unlock">{demoUnlock.isPending?'Opening your report…':'Simulate payment · ₹20 (no charge)'} <ArrowRight size={16}/></button>:<button className="btn btn-outline" disabled data-testid="button-payment-coming-soon">Payment options coming later</button>}
+      </div>
+      {demoError&&<div className="error-box" role="alert" data-testid="error-demo-unlock">{demoError}</div>}
     </section>}
-    {data.isFullReport&&sections.length>0&&<section className="full-report-detail" aria-labelledby="full-report-title"><div className="snapshot-section-heading"><div><div className="question-count">Full report</div><h2 id="full-report-title">Evidence behind the snapshot</h2></div></div><div className="report-grid">{sections.map((section:any)=><article className="report-section" key={`detail-${section.key}`}><div className="report-section-top"><h3>{section.title}</h3><span className="section-score">{section.score}/100</span></div><p>{section.summary}</p><div className="report-columns"><div><div className="question-count">Strengths</div><ul>{section.strengths?.map((item:string,index:number)=><li key={index}>{item}</li>)}</ul></div><div><div className="question-count">To improve</div><ul>{section.improvements?.map((item:string,index:number)=><li key={index}>{item}</li>)}</ul></div></div>{section.evidence?.length>0&&<div style={{marginTop:16}}><div className="question-count">Evidence noted</div><ul>{section.evidence.map((item:string,index:number)=><li key={index}>{item}</li>)}</ul></div>}</article>)}</div>{comparisons.length>0&&<article className="report-section report-comparisons"><h3>Comparisons & context</h3><ul>{comparisons.map((item:string,i:number)=><li key={i}>{item}</li>)}</ul></article>}</section>}
-     {!data.isFullReport&&<div className="locked-panel no-print"><div><h3>Want to go deeper?</h3><p>Unlock the full evidence breakdown, comparison matrix and founder refinement chat. One-time ₹20 per idea.</p>{!checkout.data?.configured&&<div className="provider-state"><LockKeyhole size={14}/> Pine Labs UAT credentials needed</div>}{checkoutError&&<div className="error-box" role="alert" style={{marginTop:10}}>{checkoutError}</div>}</div><div style={{display:'grid',gap:9,justifyItems:'start'}}><button className="btn btn-primary" onClick={startCheckout} disabled={!checkout.data?.configured||createPayment.isPending||checkout.data?.unlocked} data-testid="button-pinelabs-checkout">{createPayment.isPending?'Preparing secure checkout…':checkout.data?.configured?'Unlock full report · ₹20':'Checkout not connected'} <ArrowRight size={15}/></button><Link href={`/ideas/${ideaId}/chat`} className="btn btn-dark" data-testid="link-chat-gate"><MessageCircle size={15}/> Assistant chat <LockKeyhole size={13}/></Link></div></div>}
-     {data.isFullReport&&<div className="locked-panel no-print"><div><h3>Keep refining the idea</h3><p>Talk through a specific assumption and use your full report as the starting point.</p></div><Link href={`/ideas/${ideaId}/chat`} className="btn btn-dark" data-testid="link-chat-gate"><MessageCircle size={15}/> Open assistant chat <ArrowRight size={14}/></Link></div>}
+    {data.isFullReport&&<>
+      <section className="snapshot-areas" aria-labelledby="snapshot-areas-title">
+        <div className="snapshot-section-heading"><div><div className="question-count">The quick read</div><h2 id="snapshot-areas-title">Six lenses on the idea</h2></div><span className="muted">Directional, not definitive</span></div>
+        {sections.length>0?<div className="snapshot-area-grid">{sections.map((section:any)=><article className="snapshot-area" key={section.key} data-testid={`section-report-${section.key}`}><span>{section.title}</span><strong>{section.score}</strong><div className="snapshot-area-track"><i style={{width:`${Math.max(0,Math.min(100,section.score))}%`}}/></div><p>{section.summary}</p></article>)}</div>:<div className="empty-state"><h3>Area detail is not available.</h3><p>The snapshot has a headline score but no section data to display.</p></div>}
+      </section>
+      {nextSteps.length>0&&<section className="ai-refinement" aria-labelledby="ai-refinement-title" data-testid="section-ai-refinement">
+        <div className="snapshot-section-heading"><div><div className="question-count">Your AI idea coach</div><h2 id="ai-refinement-title">Make the idea sharper.</h2><p className="muted">Suggestions for framing, execution, and the idea itself — not homework to rewrite your answers.</p></div><span className="refinement-spark" aria-hidden="true"><Lightbulb size={22}/></span></div>
+        <div className="refinement-grid">{nextSteps.map((item:string,index:number)=>{
+          const tag=item.match(/^(?:\[(FRAME|TEST|SHARPEN)\]|(FRAME|TEST|SHARPEN))\s*:?\s*/i);
+          const category=(tag?.[1]??tag?.[2]??['FRAME','TEST','SHARPEN'][index%3]).toUpperCase();
+          const titles:Record<string,string>={FRAME:'Frame it clearly',TEST:'Try it in the real world',SHARPEN:'Sharpen the idea'};
+          const suggestion=tag?item.slice(tag[0].length):item;
+          return <article className="refinement-card" key={`${category}-${index}`} data-testid={`card-refinement-${index}`}><span className="refinement-tag">{category}</span><h3>{titles[category]??'A useful next move'}</h3><p>{suggestion}</p></article>;
+        })}</div>
+      </section>}
+      {sections.length>0&&<section className="full-report-detail" aria-labelledby="full-report-title"><div className="snapshot-section-heading"><div><div className="question-count">Full report</div><h2 id="full-report-title">Evidence behind the snapshot</h2></div></div><div className="report-grid">{sections.map((section:any)=><article className="report-section" key={`detail-${section.key}`}><div className="report-section-top"><h3>{section.title}</h3><span className="section-score">{section.score}/100</span></div><p>{section.summary}</p><div className="report-columns"><div><div className="question-count">Strengths</div><ul>{section.strengths?.map((item:string,index:number)=><li key={index}>{item}</li>)}</ul></div><div><div className="question-count">To improve</div><ul>{section.improvements?.map((item:string,index:number)=><li key={index}>{item}</li>)}</ul></div></div>{section.evidence?.length>0&&<div style={{marginTop:16}}><div className="question-count">Evidence noted</div><ul>{section.evidence.map((item:string,index:number)=><li key={index}>{item}</li>)}</ul></div>}</article>)}</div>{comparisons.length>0&&<article className="report-section report-comparisons"><h3>Comparisons & context</h3><ul>{comparisons.map((item:string,i:number)=><li key={i}>{item}</li>)}</ul></article>}</section>}
+      <div className="locked-panel"><div><h3>Keep moving</h3><p>Ask the AI coach to turn one report finding into a concrete test.</p></div><Link href={`/ideas/${ideaId}/chat`} className="btn btn-dark" data-testid="link-chat-gate"><MessageCircle size={15}/> Open AI founder coach <ArrowRight size={14}/></Link></div>
+    </>}
     <p className="muted" style={{fontSize:11,marginTop:15}}>Readiness scores are not investment advice, legal advice, or a prediction of startup success.</p>
   </main></Shell>;
 }
@@ -427,7 +432,7 @@ function ChatGate() {
   return <Shell title="Idea refinement"><main className="page">
     <div className="page-header"><div><div className="eyebrow">Post-report refinement</div><h1>{idea.data?.name??'Your idea'}</h1></div><Link href={`/ideas/${ideaId}/report`} className="btn btn-outline" data-testid="link-back-report"><ArrowLeft size={15}/> Back to snapshot</Link></div>
     {idea.isLoading||report.isLoading ? <LoadingPage/> : idea.isError||report.isError ? <ErrorMessage retry={()=>{void idea.refetch();void report.refetch();}} message="This idea or report could not be loaded."/> :
-      !report.data?.isFullReport ? <div className="chat-gate"><div className="empty-symbol"><LockKeyhole size={22}/></div><div className="eyebrow">Assistant chat · full-report feature</div><h1>Unlock your report to refine.</h1><p className="muted" style={{maxWidth:500,margin:'0 auto 20px'}}>The one-time ₹20 unlock opens the full report and the evidence-aware assistant. Payment must be verified by Pine Labs before access changes.</p><Link href={`/ideas/${ideaId}/report`} className="btn btn-primary" data-testid="link-return-snapshot">See unlock options <ArrowLeft size={14}/></Link></div> :
+      !report.data?.isFullReport ? <div className="chat-gate"><div className="empty-symbol"><LockKeyhole size={22}/></div><div className="eyebrow">AI founder coach · full-report feature</div><h1>Unlock the report to keep going.</h1><p className="muted" style={{maxWidth:500,margin:'0 auto 20px'}}>This prototype uses a no-charge demo unlock. Payment checkout will be added later.</p><Link href={`/ideas/${ideaId}/report`} className="btn btn-primary" data-testid="link-return-snapshot">See demo unlock <ArrowLeft size={14}/></Link></div> :
       <div className="chat-panel">
         <div className="notice"><strong>Evidence-first coaching.</strong> The assistant works from your report and answers; it will label assumptions and avoid inventing market or legal facts.</div>
         <div className="chat-thread" aria-live="polite">
@@ -486,6 +491,7 @@ function Router() {
     <Route path="/new"><ProtectedPage><NewIdea/></ProtectedPage></Route>
     <Route path="/ideas/:ideaId/questions"><ProtectedPage><Questions/></ProtectedPage></Route>
     <Route path="/ideas/:ideaId/report"><ProtectedPage><Report/></ProtectedPage></Route>
+    <Route path="/ideas/:ideaId/final"><ProtectedPage><Report finalView/></ProtectedPage></Route>
     <Route path="/ideas/:ideaId/chat"><ProtectedPage><ChatGate/></ProtectedPage></Route>
     <Route path="/account"><ProtectedPage><Account/></ProtectedPage></Route>
     <Route path="/sign-in/*?"><SignInPage/></Route>

@@ -12,6 +12,7 @@ export * from './checkoutStatus';
 export * from './checkoutStatusCurrency';
 export * from './checkoutStatusProvider';
 export * from './dashboardSummary';
+export * from './demoUnlockResponse';
 export * from './founderMessageInput';
 export * from './founderMessageReply';
 export * from './healthStatus';

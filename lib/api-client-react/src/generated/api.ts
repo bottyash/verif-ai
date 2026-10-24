@@ -28,6 +28,7 @@ import type {
   CheckoutSession,
   CheckoutStatus,
   DashboardSummary,
+  DemoUnlockResponse,
   FounderMessageInput,
   FounderMessageReply,
   HealthStatus,
@@ -998,6 +999,80 @@ export function useGetVerifaiCheckoutStatus<TData = Awaited<ReturnType<typeof ge
 
 
 
+
+export const getDemoUnlockVerifaiReportUrl = (ideaId: string,) => {
+
+
+
+
+  return `/api/verifai/ideas/${ideaId}/demo-unlock`
+}
+
+/**
+ * @summary Unlock a full report for development demos without taking payment
+ */
+export const demoUnlockVerifaiReport = async (ideaId: string, options?: Parameters<typeof customFetch>[1]): Promise<DemoUnlockResponse> => {
+
+  return customFetch<DemoUnlockResponse>(getDemoUnlockVerifaiReportUrl(ideaId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getDemoUnlockVerifaiReportMutationKey = () => ['demoUnlockVerifaiReport'] as const;
+
+export const getDemoUnlockVerifaiReportMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof demoUnlockVerifaiReport>>, TError,DemoUnlockVerifaiReportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof demoUnlockVerifaiReport>>, TError,DemoUnlockVerifaiReportMutationVariables, TContext> => {
+
+const mutationKey = getDemoUnlockVerifaiReportMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof demoUnlockVerifaiReport>>, DemoUnlockVerifaiReportMutationVariables> = (props) => {
+          const {ideaId} = props ?? {};
+
+          return  demoUnlockVerifaiReport(ideaId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DemoUnlockVerifaiReportMutationResult = NonNullable<Awaited<ReturnType<typeof demoUnlockVerifaiReport>>>
+
+    export type DemoUnlockVerifaiReportMutationError = ErrorType<void>
+    export type DemoUnlockVerifaiReportMutationVariables = {ideaId: string}
+
+    /**
+ * @summary Unlock a full report for development demos without taking payment
+ */
+export const useDemoUnlockVerifaiReport = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof demoUnlockVerifaiReport>>, TError,DemoUnlockVerifaiReportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof demoUnlockVerifaiReport>>,
+        TError,
+        DemoUnlockVerifaiReportMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDemoUnlockVerifaiReportMutationOptions(options), queryClient);
+    }
 
 export const getCreateVerifaiPaymentUrl = (ideaId: string,) => {
 

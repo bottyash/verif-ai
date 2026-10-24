@@ -187,6 +187,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CheckoutStatus"
+  /verifai/ideas/{ideaId}/demo-unlock:
+    post:
+      operationId: demoUnlockVerifaiReport
+      tags: [verifai]
+      summary: Unlock a full report for development demos without taking payment
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Demo report unlocked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoUnlockResponse"
+        "403":
+          description: Demo unlock is unavailable outside development
+        "404":
+          description: Idea not found
+        "409":
+          description: Generate a report before unlocking it
   /verifai/ideas/{ideaId}/payments:
     post:
       operationId: createVerifaiPayment
@@ -447,6 +471,13 @@ components:
         amount: { type: integer, const: 20 }
         currency: { type: string, enum: [INR] }
         unlocked: { type: boolean }
+    DemoUnlockResponse:
+      type: object
+      required: [ideaId, unlocked, demo]
+      properties:
+        ideaId: { type: string }
+        unlocked: { type: boolean, const: true }
+        demo: { type: boolean, const: true }
     CheckoutSession:
       type: object
       required: [paymentId, checkoutUrl, status, amount, currency]

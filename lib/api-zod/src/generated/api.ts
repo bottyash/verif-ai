@@ -315,6 +315,20 @@ export const GetVerifaiCheckoutStatusResponse = zod.object({
 
 
 /**
+ * @summary Unlock a full report for development demos without taking payment
+ */
+export const DemoUnlockVerifaiReportParams = zod.object({
+  "ideaId": zod.coerce.string()
+})
+
+export const DemoUnlockVerifaiReportResponse = zod.object({
+  "ideaId": zod.string(),
+  "unlocked": zod.literal(true),
+  "demo": zod.literal(true)
+})
+
+
+/**
  * @summary Create a one-time ₹20 Pine Labs payment order
  */
 export const CreateVerifaiPaymentParams = zod.object({

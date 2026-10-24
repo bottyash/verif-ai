@@ -194,6 +194,12 @@ export interface CheckoutStatus {
   unlocked: boolean;
 }
 
+export interface DemoUnlockResponse {
+  ideaId: string;
+  unlocked: true;
+  demo: true;
+}
+
 export type CheckoutSessionCurrency = typeof CheckoutSessionCurrency[keyof typeof CheckoutSessionCurrency];
 
 
