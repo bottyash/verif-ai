@@ -7,16 +7,16 @@
 
 Configure six specialist analysis agents and two supporting agents. The VC Agent runs the market/investor analysis and then synthesizes the specialists' results; synthesis is a second run mode, not a seventh scored report section.
 
-| Agent ID | Display name | Runs when | Responsibility |
+| VerifAI role ID | AgenticOrg agent ID | Display name | Runs when | Responsibility |
 |---|---|---|---|
-| `idea_intake` | Idea Intake & Question Architect | Before assessment, when required facts are missing | Normalize the idea and ask the deterministic three-tier questions |
-| `vc_market` | VC & Market Agent | In parallel with specialists, then after they finish | Assess market/economic viability; synthesize the final report |
-| `cto_feasibility` | CTO & Technical Feasibility | In parallel | Assess the smallest feasible product and technical risks |
-| `business_analyst` | Customer & Business Model Analyst | In parallel | Assess users, buyers, value, pricing, and revenue logic |
-| `gtm` | Go-to-Market Agent | In parallel | Define a narrow first-customer path and testable acquisition experiments |
-| `risk_analyst` | Risk Analyst | In parallel | Identify and prioritize non-legal business and execution risks |
-| `legal_compliance` | India Legal & Compliance Scout | In parallel | Flag jurisdiction-specific questions for qualified counsel |
-| `founder_coach` | Founder Refinement Coach | After a report exists | Help the founder interpret findings and choose a concrete next test |
+| `idea_intake` | `0b7703e8-f325-473b-9f41-c51b45e3290c` | Idea Intake & Question Architect | Before assessment, when required facts are missing | Normalize the idea and ask the deterministic three-tier questions |
+| `vc_market` | `8c1f1edb-b9f8-49e2-9907-0ab94c930064` | VC & Market Analysis Specialist | In parallel with specialists, then after they finish | Assess market/economic viability; synthesize the final report |
+| `cto_feasibility` | `5238001c-2d43-4b50-bd1c-91bbb7d54618` | CTO & Technical Feasibility Architect | In parallel | Assess the smallest feasible product and technical risks |
+| `business_analyst` | `d395bde8-eef8-4481-bfff-10f2c7f6b4ab` | Customer & Business Model Analyst | In parallel | Assess users, buyers, value, pricing, and revenue logic |
+| `gtm` | `84cbb7a9-46ec-4402-aa63-29ec7b8ed267` | Go-to-Market Strategy Lead | In parallel | Define a narrow first-customer path and testable acquisition experiments |
+| `risk_analyst` | `56070c5f-1882-4db7-90b3-f08620a7d2f9` | Strategic Risk Analyst | In parallel | Identify and prioritize non-legal business and execution risks |
+| `legal_compliance` | `728ff8c1-5a00-412d-b629-4a495670abbd` | India Legal & Compliance Scout | In parallel | Flag jurisdiction-specific questions for qualified counsel |
+| `founder_coach` | `077863a4-ab02-4f96-a0b7-8418e0dd0ae6` | Founder Refinement Coach | After a report exists | Help the founder interpret findings and choose a concrete next test |
 
 The six analysis agents return independent sections. Run them in parallel after the required Tier 1 answers are saved. Run `vc_market` again in synthesis mode only after all specialist sections are available.
 
